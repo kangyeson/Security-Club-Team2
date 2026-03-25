@@ -1,19 +1,10 @@
-# Python
+node_modules/
+build/
+.env
 __pycache__/
 *.pyc
-
-# Virtual Environment
-venv/
-.env/
-
-# Flask
-instance/
-*.db
-
-# IDE
-.vscode/
-.idea/
-
-# OS
+*.pyo
+uploads/*
+!uploads/.gitkeep
+postgres_data/
 .DS_Store
-Thumbs.db
