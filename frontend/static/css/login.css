@@ -1,0 +1,30 @@
+form {
+    background: white;
+    width: 300px;
+    margin: 30px auto;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+input {
+    width: 90%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    width: 95%;
+    padding: 10px;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
