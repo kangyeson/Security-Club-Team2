@@ -1,46 +1,41 @@
 version: '3.8'
 
-services:
+services: # 실행할 서비스(컨테이너)들의 목록
+
+  # [1] 데이터베이스 서비스 (RDBMS)
   db:
-    image: postgres:16-alpine
-    container_name: community-db
-    environment:
-      POSTGRES_DB: community
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin1234
+    image: mysql:8.0 # Docker Hub에서 공식 MySQL 8.0 버전을 가져와서 설치
+    container_name: security-db # 실행 중인 컨테이너를 식별할 이름
+    environment: # MySQL 설정에 필요한 환경 변수(ID/PW 등)를 주입
+      MYSQL_ROOT_PASSWORD: rkcjs123! # DB의 최고 관리자(root) 비밀번호입니다. (보안상 추후 변경 필요)
+      MYSQL_DATABASE: security_lab # 컨테이너가 시작될 때 자동으로 생성될 DB 이름
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - "3306:3306" # [호스트 포트]:[컨테이너 포트] -> 서버(gachon...)의 3306번 문과 도커 안의 3306번 문을 연결
+    volumes: # 데이터 보존을 위한 설정
+      - ./db_data:/var/lib/mysql # [내 컴퓨터 폴더]:[컨테이너 폴더]. -> 컨테이너를 지워도 데이터는 서버의 ./db_data 폴더에 남게 ehla
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d community"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+                                 # (중요) ./db 폴더의 init.sql 파일을 넣어두면,
+                                 # 처음 실행 시 테이블 생성과 초기 데이터 삽입이 자동으로 진행됩니다.
+    healthcheck: # DB가 실제로 쿼리를 받을 준비가 되었는지 검사하는 기능
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"] # 'ping'을 날려 DB 응답을 확인합
+      interval: 10s # 10초마다 체크
+      timeout: 5s # 5초 이상 응답 없으면 실패로 간주
+      retries: 5 # 5번 연속 실패하면 이 서비스에 문제가 있다고 표시
 
+  # [2] 웹 백엔드 서비스 (Flask)
   backend:
-    build: ./backend
-    container_name: community-backend
-    environment:
-      DATABASE_URL: postgresql://admin:admin1234@db:5432/community
-      SECRET_KEY: your-super-secret-key-change-in-production
-      UPLOAD_DIR: /app/uploads
+    build: . # 프로젝트 폴더 내의 'Dockerfile'을 읽어서 웹 실행 환경을 직접 생성
+    container_name: hacking-backend # 실행 중인 백엔드 컨테이너의 별명입니다.
+    environment: # Flask 코드에서 사용할 설정값들을 전달
+      DB_HOST: db # (핵심) Flask가 DB에 접속할 때 주소를 'localhost'가 아닌 서비스명인 'db'로 찾음
+      DB_NAME: security_lab
+      DB_USER: root
+      DB_PASS: rkcjs123!
     ports:
-      - "8000:8000"
-    volumes:
-      - ./backend/uploads:/app/uploads
-    depends_on:
-      db:
-        condition: service_healthy
-
-  frontend:
-    build: ./frontend
-    container_name: community-frontend
-    ports:
-      - "3000:80"
-    depends_on:
-      - backend
-
-volumes:
-  postgres_data:
+      - "3002:5000" # [호스트 포트]:[컨테이너 포트].
+                    # 멘토님이 지정해주신 3002번 포트를 통해 들어오면, 도커 안의 Flask(5000번)로 연결
+                    # 브라우저에 http://gachon.arang.kr:3002 를 치면 서버 웹 실행됨
+    depends_on: # 서비스 간의 실행 순서를 정의합니다.
+      db: # 'db' 서비스에 의존
+        condition: service_healthy # 단순히 DB 컨테이너가 켜지는 걸 넘어, 'healthcheck'가 통과되어야 백엔드를 실행
+                                   # "DB 연결 실패" 오류로 웹이 죽는 것을 방지
