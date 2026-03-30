@@ -1,0 +1,21 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [ main ] # 메인 브랜치에 푸시될 때 실행
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH Remote Commands
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd ~/Security-Club-Team2  # 서버 내 프로젝트 폴더로 이동
+            git pull origin main      # 최신 코드 가져오기
+            docker-compose up -d --build # 도커 재빌드 및 실행
