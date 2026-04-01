@@ -1,22 +1,58 @@
+/* 기본 초기화 및 색상 변수 설정 */
+:root {
+    --primary-color: #0056b3;
+    --secondary-color: #6c757d;
+    --bg-color: #f4f7f6;
+    --text-color: #333;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f6f8;
-    text-align: center;
     margin: 0;
-    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
 }
 
-h1 {
-    margin-top: 50px;
-    color: #333;
+/* 네비게이션 바 */
+.navbar {
+    background-color: #333;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 2rem;
 }
 
-a {
-    color: #007bff;
+.navbar a {
+    color: white;
     text-decoration: none;
-    font-weight: bold;
+    margin-left: 15px;
 }
 
-a:hover {
-    text-decoration: underline;
+/* 중앙 컨텐츠 영역 */
+.container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 20px;
+}
+
+/* 공통 버튼 스타일 */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+}
+
+.btn-primary { background-color: var(--primary-color); color: white; }
+.btn-secondary { background-color: var(--secondary-color); color: white; }
+.btn-block { width: 100%; display: block; margin-top: 10px; }
+
+footer {
+    text-align: center;
+    padding: 2rem;
+    color: #777;
+    font-size: 0.9em;
 }
