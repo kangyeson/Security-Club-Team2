@@ -1,25 +1,22 @@
-from flask_sqlalchemy import flask_sqlalchemy
-from datetime import datetime
-
-db = SQLAlchemy()
-
-class Post(db.Model):
-   __tablename__='posts'
-   id = db.Column(db.Integer, primary_key=True)
-   title = db.Column(db.String(255),nullable=False)
-   content = db.Column(db.Text, nullable=False)
-   is_notice = db.Column(db.Boolean, default=False)
-   view_count = db.Column(db.Integer, default=0)
-   likes_count = db.Column(db.Integer, default=0)
-   created at = db.Column(db.DateTime, default=datetime.utcnow)
+name: Deploy to Server
 
 
-class Count(db.Model):
-   __tabblename__='comments'
-   id = db.Column(db.Integer, primary_key=True)
-   post_id.Column(db.INteger, db.ForeignKey('posts.id'),nullable=False)
-   parent_id = db.Column(db.Integer, db.ForeignKey('comments.id'),nullable=True)
-   content = db.Column(db.Text, nullable=False)
-   created_at=db.Column(db.DateTime, default=datetime.utcnow)
+on:
+  push:
+    branches: [ main ] # 메인 브랜치에 푸시될 때 실행
 
-   replies = db.relationship('Comment', backref=db.backref('parent',remote_side=[id]))
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH Remote Commands
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd ~/Security-Club-Team2  # 서버 내 프로젝트 폴더로 이동
+            git pull origin main      # 최신 코드 가져오기
+            docker-compose up -d --build # 도커 재빌드 및 실행
