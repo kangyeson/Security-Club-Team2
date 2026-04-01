@@ -1,30 +1,33 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Home</title>
+{% extends "base.html" %}
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
-</head>
-<body>
+{% block title %}홈 - Security Lab{% endblock %}
 
-    <h1>웹해킹 실습 웹사이트 (자동배포테스트)</h1>
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+{% endblock %}
 
-    <a href="/login">로그인 페이지 이동</a>
+{% block content %}
+<div class="hero-section">
+    <h1>웹 해킹 실습 환경에 오신 것을 환영합니다</h1>
+    <p>보안 테스트를 위한 환경이 준비되어 있습니다.</p>
+    <div class="auth-buttons">
+        <a href="/login" class="btn btn-primary">로그인 하러가기</a>
+        <a href="/signup" class="btn btn-secondary">새로 가입하기</a>
+    </div>
+</div>
 
-    <hr>
+<hr>
 
-    <!-- XSS 테스트 영역 -->
-    <h3>XSS 테스트</h3>
-    <input id="testInput" placeholder="입력해보세요">
-    <button onclick="reflectInput()">출력</button>
+<div class="test-section">
+    <h3>[Lab 1] XSS 테스트 영역</h3>
+    <div class="input-group">
+        <input type="text" id="testInput" placeholder="스크립트를 입력해보세요">
+        <button onclick="reflectInput()" class="btn btn-outline">출력</button>
+    </div>
+    <div id="result" class="result-box"></div>
+</div>
+{% endblock %}
 
-    <div id="result"></div>
-
-    <!-- JS -->
-    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
-
-</body>
-</html>
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+{% endblock %}
