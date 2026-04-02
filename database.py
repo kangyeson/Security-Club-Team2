@@ -12,8 +12,7 @@ def get_db_connection():
         db_host = '127.0.0.1'
         db_port = 3308  # 로컬 테스트용
 
-    print(f"Connecting to {db_host}:{db_port}");
-    conn = pymysql.connect(
+    return pymysql.connect(
         host=db_host,
         port=db_port,
         user='root',
@@ -21,4 +20,15 @@ def get_db_connection():
         database='security_lab',
         cursorclass=pymysql.cursors.DictCursor
     )
-    return conn
+
+# DB 조회하여 해당 유저의 정보 조회
+def get_user_by_id(user_id):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # SQL Injection 방지를 위해 반드시 파라미터화된 쿼리(%s)를 사용
+            sql = "SELECT * FROM users WHERE user_id = %s"
+            cursor.execute(sql, (user_id,))
+            return cursor.fetchone()
+    finally:
+        conn.close()

@@ -1,5 +1,6 @@
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session, flash
 from models.user import UserModel
+from werkzeug.security import check_password_hash
 
 # auth라는 이름의 블루프린트 생성
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -50,10 +51,38 @@ def check_id():
         return jsonify({"available": True, "message": "사용 가능한 아이디입니다."})
 
 
-@auth_bp.route('/login')
+@auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    return render_template('login.html')
+    if request.method == 'GET':
+        return render_template('login.html')
 
+    if request.method == 'POST':
+        # login.html의 input name이 'id', 'pw'라고 가정
+        user_id = request.form.get('id')
+        password = request.form.get('pw')
+
+        # 1. DB에서 사용자 조회
+        user = UserModel.get_user_by_id(user_id)
+
+        # 2. 사용자 존재 여부 및 비밀번호 검증
+        if user and check_password_hash(user['password'], password):
+            # 로그인 성공: 세션에 사용자 정보 저장
+            session.clear()
+            session['user_no'] = user['id']  # DB PK가 'id'인 경우
+            session['user_id'] = user['user_id']
+            session['user_name'] = user['name']
+
+            # 메인 페이지(예: index)로 이동
+            return redirect(url_for('main.index'))
+        else:
+            # 로그인 실패: 에러 메시지와 함께 다시 로그인 페이지로
+            flash("아이디 또는 비밀번호가 일치하지 않습니다.")
+            return redirect(url_for('auth.login'))
+
+@auth_bp.route('/logout')
+def logout():
+    session.clear() # 세션 데이터 삭제
+    return redirect(url_for('auth.login'))
 
 @auth_bp.route('/find-id')
 def find_id():
