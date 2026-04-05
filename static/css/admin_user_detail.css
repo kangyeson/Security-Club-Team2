@@ -1,0 +1,260 @@
+.container {
+    max-width: 640px;
+    margin: 40px auto;
+    padding: 0 20px;
+    text-align: left;
+}
+
+/* 페이지 헤더 */
+.page-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #222;
+}
+
+.back-btn {
+    font-size: 0.9rem;
+    color: #555;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.back-btn:hover {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+/* 프로필 카드 */
+.profile-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    padding: 36px 32px;
+    text-align: center;
+}
+
+.profile-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+}
+
+.profile-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 6px;
+}
+
+.profile-role {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 28px;
+}
+
+.role-admin { color: #e53e3e; }
+.role-user  { color: #555; }
+
+/* 정보 테이블 */
+.info-table {
+    border-top: 1px solid #eee;
+    text-align: left;
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f0f0;
+    gap: 12px;
+}
+
+.info-label {
+    width: 90px;
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    color: #888;
+    font-weight: 600;
+}
+
+.info-value {
+    font-size: 0.95rem;
+    color: #333;
+    word-break: break-all;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 비밀번호 토글 */
+.pw-hidden {
+    letter-spacing: 2px;
+    color: #aaa;
+}
+
+.pw-real {
+    font-family: monospace;
+    color: #333;
+}
+
+.hidden {
+    display: none;
+}
+
+.toggle-btn {
+    padding: 3px 10px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f8f8f8;
+    color: #555;
+    flex-shrink: 0;
+}
+
+.toggle-btn:hover {
+    background: #e8e8e8;
+}
+
+/* 권한 배지 */
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.badge-admin {
+    background: #fff0f0;
+    color: #e53e3e;
+}
+
+.badge-user {
+    background: #f0f4ff;
+    color: #3b5bdb;
+}
+
+/* 카드 하단 삭제 버튼 */
+.card-footer {
+    margin-top: 28px;
+    text-align: right;
+}
+
+.delete-btn {
+    padding: 10px 24px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    background: #e53e3e;
+    color: #fff;
+}
+
+.delete-btn:hover {
+    background: #c53030;
+}
+
+/* 삭제 확인 모달 */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 36px 32px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+.modal-icon {
+    font-size: 2.2rem;
+    color: #e53e3e;
+    margin-bottom: 12px;
+}
+
+.modal-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #222;
+    margin: 0 0 12px;
+}
+
+.modal-desc {
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+.modal-error {
+    font-size: 0.85rem;
+    color: #e53e3e;
+    margin-bottom: 8px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.modal-cancel-btn {
+    padding: 10px 24px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #f8f8f8;
+    color: #555;
+}
+
+.modal-cancel-btn:hover {
+    background: #eee;
+}
+
+.modal-confirm-btn {
+    padding: 10px 24px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    background: #e53e3e;
+    color: #fff;
+}
+
+.modal-confirm-btn:hover {
+    background: #c53030;
+}
+
+.modal-confirm-btn:disabled {
+    background: #fc8181;
+    cursor: not-allowed;
+}

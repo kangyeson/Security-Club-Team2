@@ -1,0 +1,296 @@
+.container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+/* 헤더 */
+.board-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.board-title {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #222;
+}
+
+.total-count {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+/* 게시글 테이블 */
+.board-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+}
+
+.board-table thead tr {
+    background: #f7f7f7;
+    border-bottom: 2px solid #eee;
+}
+
+.board-table th {
+    padding: 12px 16px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #888;
+    text-align: left;
+}
+
+.board-table td {
+    padding: 13px 16px;
+    font-size: 0.9rem;
+    color: #333;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+}
+
+.board-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 열 너비 */
+.col-num    { width: 60px;  text-align: center; }
+.col-title  { /* 나머지 */ }
+.col-author { width: 100px; }
+.col-date   { width: 100px; white-space: nowrap; color: #aaa; }
+.col-view   { width: 60px;  text-align: center; color: #bbb; }
+
+/* 공지 행 */
+.row-notice {
+    background: #faf5ff;
+}
+
+.row-notice td {
+    border-bottom: 1px solid #ede9fe;
+}
+
+.pin-icon {
+    font-size: 0.9rem;
+}
+
+/* 관리자 작성 글 — 보라색 */
+.link-admin {
+    color: #7c3aed !important;
+    font-weight: 600;
+}
+
+.author-admin {
+    color: #7c3aed;
+    font-weight: 600;
+}
+
+.admin-tag {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 1px 7px;
+    background: #f3e8ff;
+    color: #7c3aed;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+/* 일반 링크 */
+.post-link {
+    text-decoration: none;
+    color: #222;
+}
+
+.post-link:hover {
+    text-decoration: underline;
+    color: #7c3aed;
+}
+
+/* 빈 메시지 */
+.empty-msg {
+    text-align: center;
+    color: #aaa;
+    padding: 40px 0;
+    font-size: 0.9rem;
+}
+
+/* 페이지네이션 */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-top: 24px;
+}
+
+.page-btn {
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    color: #555;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.page-btn:hover {
+    border-color: #7c3aed;
+    color: #7c3aed;
+}
+
+.page-btn.active {
+    background: #7c3aed;
+    border-color: #7c3aed;
+    color: #fff;
+    font-weight: 600;
+    cursor: default;
+}
+
+.page-btn.disabled {
+    color: #ccc;
+    border-color: #eee;
+    cursor: default;
+    pointer-events: none;
+}
+
+/* ── 우클릭 컨텍스트 메뉴 ─────────────────────────────────────── */
+.context-menu {
+    position: absolute;
+    z-index: 1000;
+    background: #fff;
+    border: 1px solid #e2e2e2;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.13);
+    min-width: 180px;
+    overflow: hidden;
+}
+
+.context-menu-title {
+    padding: 8px 14px 6px;
+    font-size: 0.78rem;
+    color: #aaa;
+    border-bottom: 1px solid #f0f0f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
+}
+
+.context-delete-btn {
+    display: block;
+    width: 100%;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #e53e3e;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.context-delete-btn:hover {
+    background: #fff5f5;
+}
+
+/* 관리자 우클릭 가능 행 */
+tr[data-board-id] {
+    cursor: context-menu;
+}
+
+/* ── 삭제 확인 모달 ───────────────────────────────────────────── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 36px 32px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+.modal-icon {
+    font-size: 2rem;
+    color: #e53e3e;
+    margin-bottom: 10px;
+}
+
+.modal-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #222;
+    margin: 0 0 8px;
+}
+
+.modal-desc {
+    font-size: 0.92rem;
+    color: #444;
+    font-weight: 600;
+    margin-bottom: 4px;
+    word-break: break-all;
+}
+
+.modal-warn {
+    font-size: 0.82rem;
+    color: #999;
+    margin-bottom: 6px;
+}
+
+.modal-error {
+    font-size: 0.83rem;
+    color: #e53e3e;
+    margin-bottom: 4px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.modal-cancel-btn {
+    padding: 10px 24px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #f8f8f8;
+    color: #555;
+}
+
+.modal-cancel-btn:hover { background: #eee; }
+
+.modal-confirm-btn {
+    padding: 10px 24px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    background: #e53e3e;
+    color: #fff;
+}
+
+.modal-confirm-btn:hover    { background: #c53030; }
+.modal-confirm-btn:disabled { background: #fc8181; cursor: not-allowed; }
+
+.hidden { display: none !important; }

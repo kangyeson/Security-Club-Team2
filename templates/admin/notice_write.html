@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공지 작성 | 관리자</title>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/notice_write.css">
+</head>
+<body>
+<div class="container">
+
+    <!-- 헤더 -->
+    <div class="page-header">
+        <a href="/board/" class="back-btn">← 게시판으로</a>
+        <h1>공지 작성</h1>
+    </div>
+
+    <!-- 안내 배지 -->
+    <div class="notice-badge-wrap">
+        <span class="notice-prefix-badge">[공지사항]</span>
+        <span class="notice-hint">제목 앞에 자동으로 붙습니다</span>
+    </div>
+
+    <!-- 작성 폼 (multipart/form-data — 파일 첨부용) -->
+    <form id="noticeForm" class="notice-form" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="title" class="form-label">제목</label>
+            <input
+                type="text"
+                id="title"
+                name="title"
+                class="form-input"
+                placeholder="공지 제목을 입력하세요"
+                maxlength="195"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="content" class="form-label">내용</label>
+            <textarea
+                id="content"
+                name="content"
+                class="form-textarea"
+                placeholder="공지 내용을 입력하세요"
+                rows="12"
+                required
+            ></textarea>
+        </div>
+
+        <!-- 파일 첨부 -->
+        <div class="form-group">
+            <label class="form-label">파일 첨부 <span class="optional-tag">선택</span></label>
+            <div class="file-upload-area" id="fileUploadArea">
+                <input
+                    type="file"
+                    id="fileInput"
+                    name="file"
+                    class="file-input-hidden"
+                    onchange="onFileSelected(this)"
+                >
+                <div class="file-upload-placeholder" id="filePlaceholder" onclick="document.getElementById('fileInput').click()">
+                    <span class="file-upload-icon">📎</span>
+                    <span class="file-upload-text">클릭하여 파일 선택</span>
+                    <span class="file-upload-hint">모든 파일 형식 지원</span>
+                </div>
+                <div class="file-selected-info hidden" id="fileSelectedInfo">
+                    <span class="file-icon">📄</span>
+                    <span class="file-name" id="selectedFileName"></span>
+                    <span class="file-size" id="selectedFileSize"></span>
+                    <button type="button" class="file-remove-btn" onclick="removeFile()">✕</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="errorMsg" class="error-msg hidden"></div>
+
+        <div class="form-actions">
+            <a href="/board/" class="cancel-btn">취소</a>
+            <button type="submit" id="submitBtn" class="submit-btn">공지 등록</button>
+        </div>
+    </form>
+
+</div>
+
+<script>
+    // ── 파일 선택 ─────────────────────────────────────────────────────────────
+    function onFileSelected(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        document.getElementById('filePlaceholder').classList.add('hidden');
+        document.getElementById('fileSelectedInfo').classList.remove('hidden');
+        document.getElementById('selectedFileName').textContent = file.name;
+        document.getElementById('selectedFileSize').textContent = formatBytes(file.size);
+    }
+
+    function removeFile() {
+        document.getElementById('fileInput').value = '';
+        document.getElementById('fileSelectedInfo').classList.add('hidden');
+        document.getElementById('filePlaceholder').classList.remove('hidden');
+    }
+
+    function formatBytes(bytes) {
+        if (bytes < 1024)        return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    // ── 파일 드래그&드롭 ─────────────────────────────────────────────────────
+    const area = document.getElementById('fileUploadArea');
+
+    area.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        area.classList.add('drag-over');
+    });
+    area.addEventListener('dragleave', () => area.classList.remove('drag-over'));
+    area.addEventListener('drop', (e) => {
+        e.preventDefault();
+        area.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (!file) return;
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        document.getElementById('fileInput').files = dt.files;
+        onFileSelected(document.getElementById('fileInput'));
+    });
+
+    // ── 폼 제출 ──────────────────────────────────────────────────────────────
+    const form      = document.getElementById('noticeForm');
+    const errorMsg  = document.getElementById('errorMsg');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorMsg.classList.add('hidden');
+
+        const title   = document.getElementById('title').value.trim();
+        const content = document.getElementById('content').value.trim();
+
+        if (!title)   { showError('제목을 입력해주세요.');   return; }
+        if (!content) { showError('내용을 입력해주세요.');   return; }
+
+        submitBtn.disabled    = true;
+        submitBtn.textContent = '등록 중...';
+
+        try {
+            // multipart/form-data 전송 (Content-Type 헤더 자동 설정)
+            const formData = new FormData(form);
+
+            const res  = await fetch('/admin/notices', { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (!res.ok) { showError(data.error || '등록 중 오류가 발생했습니다.'); return; }
+
+            window.location.href = '/board/';
+        } catch (err) {
+            showError('네트워크 오류가 발생했습니다.');
+        } finally {
+            submitBtn.disabled    = false;
+            submitBtn.textContent = '공지 등록';
+        }
+    });
+
+    function showError(msg) {
+        errorMsg.textContent = msg;
+        errorMsg.classList.remove('hidden');
+    }
+</script>
+</body>
+</html>

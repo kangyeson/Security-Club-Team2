@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>회원 상세 정보</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_user_detail.css') }}">
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="page-header">
+            <a href="javascript:history.back()" class="back-btn">← 목록으로</a>
+            <h1>회원 상세 정보</h1>
+        </div>
+
+        <div class="profile-card">
+
+            <div class="profile-avatar">
+                <span>{{ user.name[0] }}</span>
+            </div>
+
+            <div class="profile-name">{{ user.name }}</div>
+            <div class="profile-role {{ 'role-admin' if user.role == 'ADMIN' else 'role-user' }}">
+                {{ '관리자' if user.role == 'ADMIN' else '일반 회원' }}
+            </div>
+
+            <div class="info-table">
+
+                <div class="info-row">
+                    <span class="info-label">아이디</span>
+                    <span class="info-value">{{ user.user_id }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">비밀번호</span>
+                    <span class="info-value password-field">
+                        <span id="pw-text" class="pw-hidden">{{ '•' * user.password | length }}</span>
+                        <span id="pw-real" class="pw-real hidden">{{ user.password }}</span>
+                        <button class="toggle-btn" onclick="togglePassword()">보기</button>
+                    </span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">이름</span>
+                    <span class="info-value">{{ user.name }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">이메일</span>
+                    <span class="info-value">{{ user.email if user.email else '—' }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">권한</span>
+                    <span class="info-value">
+                        <span class="badge {{ 'badge-admin' if user.role == 'ADMIN' else 'badge-user' }}">
+                            {{ user.role }}
+                        </span>
+                    </span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">가입일시</span>
+                    <span class="info-value">{{ user.created_at }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">수정일시</span>
+                    <span class="info-value">{{ user.updated_at }}</span>
+                </div>
+
+            </div>
+
+            <div class="card-footer">
+                <button class="delete-btn" onclick="openModal()">회원 삭제</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- 삭제 확인 모달 -->
+    <div class="modal-overlay hidden" id="deleteModal">
+        <div class="modal-box">
+            <div class="modal-icon">⚠</div>
+            <h2 class="modal-title">회원 삭제</h2>
+            <p class="modal-desc">
+                <strong>{{ user.name }}</strong> 회원을 삭제하시겠습니까?<br>
+                게시글, 댓글 등 모든 연관 데이터가 <strong>영구 삭제</strong>되며 복구할 수 없습니다.
+            </p>
+            <p class="modal-error hidden" id="modalError"></p>
+            <div class="modal-actions">
+                <button class="modal-cancel-btn" onclick="closeModal()">취소</button>
+                <button class="modal-confirm-btn" id="confirmBtn" onclick="confirmDelete()">삭제 확인</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const hidden = document.getElementById('pw-text');
+            const real   = document.getElementById('pw-real');
+            const btn    = document.querySelector('.toggle-btn');
+
+            if (real.classList.contains('hidden')) {
+                hidden.classList.add('hidden');
+                real.classList.remove('hidden');
+                btn.textContent = '숨기기';
+            } else {
+                hidden.classList.remove('hidden');
+                real.classList.add('hidden');
+                btn.textContent = '보기';
+            }
+        }
+
+        function openModal() {
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            document.getElementById('modalError').classList.add('hidden');
+        }
+
+        function confirmDelete() {
+            const confirmBtn = document.getElementById('confirmBtn');
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = '삭제 중...';
+
+            fetch('/admin/users/{{ user.user_idx }}', { method: 'DELETE' })
+                .then(res => res.json().then(data => ({ status: res.status, data })))
+                .then(({ status, data }) => {
+                    if (status === 200) {
+                        window.location.href = '/admin/users';
+                    } else {
+                        const err = document.getElementById('modalError');
+                        err.textContent = data.error || '삭제에 실패했습니다.';
+                        err.classList.remove('hidden');
+                        confirmBtn.disabled = false;
+                        confirmBtn.textContent = '삭제 확인';
+                    }
+                })
+                .catch(() => {
+                    const err = document.getElementById('modalError');
+                    err.textContent = '서버와 통신 중 오류가 발생했습니다.';
+                    err.classList.remove('hidden');
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = '삭제 확인';
+                });
+        }
+    </script>
+
+</body>
+</html>

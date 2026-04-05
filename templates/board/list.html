@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시판</title>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/board_list.css">
+</head>
+<body>
+<div class="container">
+
+    <!-- 헤더 -->
+    <div class="board-header">
+        <h1 class="board-title">게시판</h1>
+        <span class="total-count">총 {{ total }}개</span>
+    </div>
+
+    <!-- 게시글 테이블 -->
+    <table class="board-table">
+        <thead>
+            <tr>
+                <th class="col-num">번호</th>
+                <th class="col-title">제목</th>
+                <th class="col-author">작성자</th>
+                <th class="col-date">날짜</th>
+                <th class="col-view">조회</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% if posts %}
+            {% for post in posts %}
+            <tr class="post-row
+                {% if post.type == 'NOTICE' %}row-notice{% endif %}
+                {% if post.author_role == 'ADMIN' %}row-admin{% endif %}"
+                {% if is_admin %}
+                data-board-id="{{ post.board_id }}"
+                data-title="{{ post.title }}"
+                oncontextmenu="showContextMenu(event, this)"
+                {% endif %}
+            >
+                <td class="col-num">
+                    {% if post.type == 'NOTICE' %}
+                        <span class="pin-icon">📌</span>
+                    {% else %}
+                        {{ loop.index + (page - 1) * 15 }}
+                    {% endif %}
+                </td>
+                <td class="col-title">
+                    <a href="/board/{{ post.board_id }}" class="post-link
+                        {% if post.author_role == 'ADMIN' %}link-admin{% endif %}
+                    ">
+                        {{ post.title }}
+                    </a>
+                </td>
+                <td class="col-author
+                    {% if post.author_role == 'ADMIN' %}author-admin{% endif %}
+                ">
+                    {{ post.author_name }}
+                    {% if post.author_role == 'ADMIN' %}
+                        <span class="admin-tag">관리자</span>
+                    {% endif %}
+                </td>
+                <td class="col-date">{{ post.created_at }}</td>
+                <td class="col-view">{{ post.view }}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="5" class="empty-msg">등록된 게시글이 없습니다.</td>
+            </tr>
+        {% endif %}
+        </tbody>
+    </table>
+
+    <!-- 페이지네이션 -->
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% if page > 1 %}
+            <a href="?page={{ page - 1 }}" class="page-btn">이전</a>
+        {% else %}
+            <span class="page-btn disabled">이전</span>
+        {% endif %}
+
+        {% for p in range(1, total_pages + 1) %}
+            {% if p == page %}
+                <span class="page-btn active">{{ p }}</span>
+            {% else %}
+                <a href="?page={{ p }}" class="page-btn">{{ p }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page < total_pages %}
+            <a href="?page={{ page + 1 }}" class="page-btn">다음</a>
+        {% else %}
+            <span class="page-btn disabled">다음</span>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+
+{% if is_admin %}
+<!-- 우클릭 컨텍스트 메뉴 -->
+<div id="contextMenu" class="context-menu hidden">
+    <div class="context-menu-title" id="contextMenuTitle"></div>
+    <button class="context-delete-btn" id="contextDeleteBtn" onclick="confirmDelete()">
+        🗑 게시글 삭제
+    </button>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div id="deleteModal" class="modal-overlay hidden">
+    <div class="modal-box">
+        <div class="modal-icon">⚠</div>
+        <p class="modal-title">게시글을 삭제하시겠습니까?</p>
+        <p class="modal-desc" id="modalDesc"></p>
+        <p class="modal-warn">댓글 등 연관 데이터가 모두 영구 삭제됩니다.</p>
+        <div id="modalError" class="modal-error hidden"></div>
+        <div class="modal-actions">
+            <button class="modal-cancel-btn" onclick="closeModal()">취소</button>
+            <button class="modal-confirm-btn" id="modalConfirmBtn" onclick="executeDelete()">삭제</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let targetBoardId = null;
+    let targetTitle   = '';
+
+    // ── 우클릭 메뉴 표시 ─────────────────────────────────────────────────────
+    function showContextMenu(e, row) {
+        e.preventDefault();
+        targetBoardId = row.dataset.boardId;
+        targetTitle   = row.dataset.title;
+
+        const menu = document.getElementById('contextMenu');
+        document.getElementById('contextMenuTitle').textContent = targetTitle;
+
+        // 메뉴 위치 계산 (화면 벗어나지 않도록)
+        menu.classList.remove('hidden');
+        const menuW = menu.offsetWidth;
+        const menuH = menu.offsetHeight;
+        let x = e.clientX + window.scrollX;
+        let y = e.clientY + window.scrollY;
+
+        if (e.clientX + menuW > window.innerWidth)  x -= menuW;
+        if (e.clientY + menuH > window.innerHeight) y -= menuH;
+
+        menu.style.left = x + 'px';
+        menu.style.top  = y + 'px';
+    }
+
+    // 메뉴 외부 클릭 시 닫기
+    document.addEventListener('click', () => {
+        document.getElementById('contextMenu').classList.add('hidden');
+    });
+
+    // ── 삭제 확인 모달 ────────────────────────────────────────────────────────
+    function confirmDelete() {
+        document.getElementById('contextMenu').classList.add('hidden');
+        document.getElementById('modalDesc').textContent = `"${targetTitle}"`;
+        document.getElementById('modalError').classList.add('hidden');
+        document.getElementById('modalConfirmBtn').disabled = false;
+        document.getElementById('modalConfirmBtn').textContent = '삭제';
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    // ── 삭제 실행 ─────────────────────────────────────────────────────────────
+    async function executeDelete() {
+        const btn = document.getElementById('modalConfirmBtn');
+        btn.disabled = true;
+        btn.textContent = '삭제 중...';
+        document.getElementById('modalError').classList.add('hidden');
+
+        try {
+            const res  = await fetch(`/admin/board/${targetBoardId}`, { method: 'DELETE' });
+            const data = await res.json();
+
+            if (!res.ok) {
+                const errEl = document.getElementById('modalError');
+                errEl.textContent = data.error || '삭제 중 오류가 발생했습니다.';
+                errEl.classList.remove('hidden');
+                btn.disabled = false;
+                btn.textContent = '삭제';
+                return;
+            }
+
+            // 성공 → 현재 페이지 새로고침
+            location.reload();
+        } catch (err) {
+            const errEl = document.getElementById('modalError');
+            errEl.textContent = '네트워크 오류가 발생했습니다.';
+            errEl.classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = '삭제';
+        }
+    }
+</script>
+{% endif %}
+
+</body>
+</html>

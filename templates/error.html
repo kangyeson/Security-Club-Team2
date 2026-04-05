@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ code }} 오류</title>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <style>
+        body { display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f7f7f7; }
+        .error-box { text-align: center; padding: 60px 40px; }
+        .error-code { font-size: 5rem; font-weight: 800; color: #e2e2e2; margin: 0; }
+        .error-msg  { font-size: 1.1rem; color: #555; margin: 12px 0 28px; }
+        .home-btn   { display: inline-block; padding: 10px 28px; background: #7c3aed; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .home-btn:hover { background: #6d28d9; }
+    </style>
+</head>
+<body>
+<div class="error-box">
+    <p class="error-code">{{ code }}</p>
+    <p class="error-msg">{{ message }}</p>
+    <a href="/" class="home-btn">홈으로</a>
+</div>
+</body>
+</html>
