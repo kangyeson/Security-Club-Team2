@@ -2,39 +2,35 @@ from flask import Blueprint, request, jsonify, render_template, redirect, url_fo
 from models.user import UserModel
 from werkzeug.security import check_password_hash
 
-# auth라는 이름의 블루프린트 생성
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
-# --- 1. 회원가입 화면 및 기능 ---
+# --- 1. 회원가입 ---
 @auth_bp.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'GET':
         return render_template('signup.html')
 
-    if request.method == 'POST':
-        # form 데이터 받아오기
-        user_id = request.form.get('id')
-        password = request.form.get('pw')
-        name = request.form.get('name')
-        email = request.form.get('email')
+    user_id = request.form.get('id')
+    password = request.form.get('pw')
+    name = request.form.get('name')
+    email = request.form.get('email')
 
-        # 서버 측 유효성 검사 (프론트엔드를 우회하는 공격 대비)
-        if not all([user_id, password, name, email]):
-            return "모든 항목을 입력해주세요.", 400
+    if not all([user_id, password, name, email]):
+        flash("모든 항목을 입력해주세요.")
+        return redirect(url_for('auth.signup'))
 
-        # 중복 검사 (서버에서 한 번 더)
-        if UserModel.get_user_by_id(user_id):
-            return "이미 존재하는 아이디입니다.", 400
+    if UserModel.get_user_by_id(user_id):
+        flash("이미 존재하는 아이디입니다.")
+        return redirect(url_for('auth.signup'))
 
-        # DB 저장 시도
-        success = UserModel.create_user(user_id, password, name, email)
-
-        if success:
-            # 가입 성공 시 로그인 페이지로 이동
-            return redirect(url_for('auth.login'))
-        else:
-            return "회원가입 중 오류가 발생했습니다.", 500
+    success = UserModel.create_user(user_id, password, name, email)
+    if success:
+        flash("회원가입이 완료되었습니다. 로그인해주세요.")
+        return redirect(url_for('auth.login'))
+    else:
+        flash("회원가입 중 오류가 발생했습니다.")
+        return redirect(url_for('auth.signup'))
 
 
 # --- 2. 아이디 중복 확인 API (Ajax 용) ---
@@ -51,44 +47,82 @@ def check_id():
         return jsonify({"available": True, "message": "사용 가능한 아이디입니다."})
 
 
+# --- 3. 로그인 / 로그아웃 ---
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
         return render_template('login.html')
 
-    if request.method == 'POST':
-        # login.html의 input name이 'id', 'pw'라고 가정
-        user_id = request.form.get('id')
-        password = request.form.get('pw')
+    user_id = request.form.get('id')
+    password = request.form.get('pw')
 
-        # 1. DB에서 사용자 조회
-        user = UserModel.get_user_by_id(user_id)
+    if not user_id or not password:
+        flash("아이디와 비밀번호를 모두 입력해주세요.")
+        return redirect(url_for('auth.login'))
 
-        # 2. 사용자 존재 여부 및 비밀번호 검증
-        if user and check_password_hash(user['password'], password):
-            # 로그인 성공: 세션에 사용자 정보 저장
-            session.clear()
-            session['user_no'] = user['id']  # DB PK가 'id'인 경우
-            session['user_id'] = user['user_id']
-            session['user_name'] = user['name']
+    user = UserModel.get_user_by_id(user_id)
 
-            # 메인 페이지(예: index)로 이동
-            return redirect(url_for('main.index'))
-        else:
-            # 로그인 실패: 에러 메시지와 함께 다시 로그인 페이지로
-            flash("아이디 또는 비밀번호가 일치하지 않습니다.")
-            return redirect(url_for('auth.login'))
+    if user and check_password_hash(user['password'], password):
+        session.clear()
+        session['user_no'] = user['user_idx']
+        session['user_id'] = user['user_id']
+        session['user_name'] = user['name']
+        session['user_role'] = user['role']
+        return redirect(url_for('home'))
+    else:
+        flash("아이디 또는 비밀번호가 일치하지 않습니다.")
+        return redirect(url_for('auth.login'))
+
 
 @auth_bp.route('/logout')
 def logout():
-    session.clear() # 세션 데이터 삭제
+    session.clear()
     return redirect(url_for('auth.login'))
 
-@auth_bp.route('/find-id')
+
+# --- 4. 아이디 찾기 ---
+@auth_bp.route('/find-id', methods=['GET', 'POST'])
 def find_id():
-    return render_template('find_id.html')
+    if request.method == 'GET':
+        return render_template('find_id.html')
+
+    name = request.form.get('name')
+    email = request.form.get('email')
+
+    if not name or not email:
+        flash("이름과 이메일을 모두 입력해주세요.")
+        return redirect(url_for('auth.find_id'))
+
+    user = UserModel.get_user_by_name_email(name, email)
+    if user:
+        flash(f"가입하신 아이디는 '{user['user_id']}' 입니다.")
+    else:
+        flash("입력하신 정보와 일치하는 계정을 찾을 수 없습니다.")
+    return redirect(url_for('auth.find_id'))
 
 
-@auth_bp.route('/find-pw')
+# --- 5. 비밀번호 찾기 및 재설정 ---
+@auth_bp.route('/find-pw', methods=['GET', 'POST'])
 def find_pw():
-    return render_template('find_pw.html')
+    if request.method == 'GET':
+        return render_template('find_pw.html')
+
+    user_id = request.form.get('id')
+    email = request.form.get('email')
+    new_pw = request.form.get('new_pw')
+
+    if not all([user_id, email, new_pw]):
+        flash("모든 항목을 입력해주세요.")
+        return redirect(url_for('auth.find_pw'))
+
+    if len(new_pw) < 4:
+        flash("비밀번호는 4자 이상이어야 합니다.")
+        return redirect(url_for('auth.find_pw'))
+
+    success = UserModel.reset_password_by_id_email(user_id, email, new_pw)
+    if success:
+        flash("비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.")
+        return redirect(url_for('auth.login'))
+    else:
+        flash("아이디 또는 이메일 정보가 일치하지 않습니다.")
+        return redirect(url_for('auth.find_pw'))

@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
     pwInput.addEventListener('input', checkPasswordMatch);
     pwConfirmInput.addEventListener('input', checkPasswordMatch);
 
-    // 2. 아이디 중복 확인 (가짜 로직 - Mock)
+    // 2. 아이디 중복 확인
     btnCheckId.addEventListener('click', function() {
         const userId = idInput.value.trim();
 
@@ -43,17 +43,23 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // TODO: 나중에 fetch('/auth/check-id') 로 실제 백엔드와 연결할 부분입니다.
-        // 지금은 'admin'만 무조건 중복이라고 가정하는 가짜 로직입니다.
-        if (userId === 'admin') {
-            idMsg.textContent = '이미 사용 중인 아이디입니다.';
-            idMsg.className = 'validation-msg text-danger';
-            isIdChecked = false;
-        } else {
-            idMsg.textContent = '사용 가능한 아이디입니다.';
-            idMsg.className = 'validation-msg text-success';
-            isIdChecked = true;
-        }
+        fetch(`/auth/check-id?user_id=${encodeURIComponent(userId)}`)
+            .then(res => res.json())
+            .then(data => {
+                idMsg.textContent = data.message;
+                if (data.available) {
+                    idMsg.className = 'validation-msg text-success';
+                    isIdChecked = true;
+                } else {
+                    idMsg.className = 'validation-msg text-danger';
+                    isIdChecked = false;
+                }
+            })
+            .catch(() => {
+                idMsg.textContent = '서버 오류가 발생했습니다.';
+                idMsg.className = 'validation-msg text-danger';
+                isIdChecked = false;
+            });
     });
 
     // 3. 폼 제출 시 최종 검사

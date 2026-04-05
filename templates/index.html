@@ -11,8 +11,8 @@
     <h1>웹 해킹 실습 환경에 오신 것을 환영합니다</h1>
     <p>보안 테스트를 위한 환경이 준비되어 있습니다.</p>
     <div class="auth-buttons">
-        <a href="/login" class="btn btn-primary">로그인 하러가기</a>
-        <a href="/signup" class="btn btn-secondary">새로 가입하기</a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary">로그인 하러가기</a>
+        <a href="{{ url_for('auth.signup') }}" class="btn btn-secondary">새로 가입하기</a>
     </div>
 </div>
 

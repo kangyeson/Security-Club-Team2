@@ -11,8 +11,13 @@
     <nav class="navbar">
         <div class="logo"><a href="/">Web Hacking Lab</a></div>
         <div class="nav-links">
-            <a href="/login">로그인</a>
-            <a href="/signup">회원가입</a>
+            {% if session.get('user_id') %}
+                <span style="color: #ccc; font-size: 0.9em;">{{ session['user_name'] }}님</span>
+                <a href="{{ url_for('auth.logout') }}">로그아웃</a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}">로그인</a>
+                <a href="{{ url_for('auth.signup') }}">회원가입</a>
+            {% endif %}
         </div>
     </nav>
 
@@ -24,7 +29,6 @@
         <p>&copy; 2026 Security Club Team2</p>
     </footer>
 
-    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

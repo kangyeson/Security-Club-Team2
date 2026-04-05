@@ -5,11 +5,11 @@ import pymysql
 def get_db_connection():
 
     return pymysql.connect(
-        host='gachon.arang.kr',
-        port=3306,
-        user='root',
+        host=os.environ.get('DB_HOST', 'gachon.arang.kr'),
+        port=int(os.environ.get('DB_PORT', 3306)),
+        user=os.environ.get('DB_USER', 'root'),
         password=os.environ.get('DB_PASS', 'rkcjs123!'),
-        database='security_lab',
+        database=os.environ.get('DB_NAME', 'security_lab'),
         cursorclass=pymysql.cursors.DictCursor
     )
 

@@ -14,10 +14,10 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- 3. 초기 관리자/게스트 계정 추가
--- 주의: 비밀번호는 반드시 파이썬 werkzeug.security로 생성한 '해시값'을 넣어야 로그인 로직과 호환됨
--- 아래는 'admin123', 'guest123'을 임의로 해싱한 예시 값입니다.
-INSERT INTO users (user_id, password, name, role)
-VALUES ('admin', 'scrypt:32768:8:1$xYzA...가짜해시값...$1234', '관리자', 'ADMIN');
+-- admin 비밀번호: admin123 / guest 비밀번호: guest123
+-- (werkzeug.security.generate_password_hash 로 생성된 실제 해시값)
+INSERT INTO users (user_id, password, name, role, email)
+VALUES ('admin', 'scrypt:32768:8:1$9TwGfIeQ0Idp1JuK$5115efbb8a85b707b8eec57c632864b0c9408a9d2436594cb37b718f3a566e13992cd7b7b112b91d8a0f15d3a27a5fcd07e995975dd59e4b53aa7b3a4705c11b', '관리자', 'ADMIN', 'admin@security-lab.kr');
 
-INSERT INTO users (user_id, password, name, role)
-VALUES ('guest', 'scrypt:32768:8:1$aBcd...가짜해시값...$5678', '게스트', 'USER');
+INSERT INTO users (user_id, password, name, role, email)
+VALUES ('guest', 'scrypt:32768:8:1$EFk8kM1aFW6RFjZ4$946627173bd038456e98e5edd4131ecc17600ec44bbc62ec82a435875c93d18253b7fbd42a7a8445453418588d5cfa19763fc829d670b35865866516282f319d', '게스트', 'USER', 'guest@security-lab.kr');
