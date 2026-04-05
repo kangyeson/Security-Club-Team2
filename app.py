@@ -15,9 +15,11 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 # ── 블루프린트 등록 ────────────────────────────────────────────────────────────
-from blueprints.admin import admin_bp   # /admin/*  (관리자 API + 페이지)
-from blueprints.board import board_bp   # /board/*  (게시판 목록·상세)
+from blueprints.auth.routes import auth_bp   # /auth/*  (로그인, 회원가입, 아이디/비밀번호 찾기)
+from blueprints.admin import admin_bp        # /admin/* (관리자 API + 페이지)
+from blueprints.board import board_bp        # /board/* (게시판 목록·상세)
 
+app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(board_bp)
 
@@ -27,9 +29,9 @@ app.register_blueprint(board_bp)
 @app.context_processor
 def inject_user():
     return {
-        'is_admin':      session.get('role') == 'ADMIN',
-        'current_user':  session.get('user_id'),
-        'current_role':  session.get('role'),
+        'is_admin':     session.get('role') == 'ADMIN',
+        'current_user': session.get('user_id'),
+        'current_role': session.get('role'),
     }
 
 
@@ -46,7 +48,6 @@ def login():
 # ── 에러 핸들러 ───────────────────────────────────────────────────────────────
 @app.errorhandler(404)
 def not_found(_):
-    # API 요청(JSON)이면 JSON, 페이지 요청이면 HTML 반환
     if _wants_json():
         return jsonify({'error': '요청한 리소스를 찾을 수 없습니다.'}), 404
     return render_template('error.html', code=404, message='페이지를 찾을 수 없습니다.'), 404
@@ -69,7 +70,6 @@ def internal_error(_):
 
 
 def _wants_json():
-    """요청이 JSON 응답을 원하는지 확인 (API 클라이언트 vs 브라우저)"""
     from flask import request
     best = request.accept_mimetypes.best_match(['application/json', 'text/html'])
     return best == 'application/json'

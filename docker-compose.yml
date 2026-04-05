@@ -12,7 +12,7 @@ services: # 실행할 서비스(컨테이너)들의 목록
     ports:
       - "3306:3306" # [호스트 포트]:[컨테이너 포트] -> 서버(gachon...)의 3306번 문과 도커 안의 3306번 문을 연결
     volumes: # 데이터 보존을 위한 설정
-      - ./db_data:/var/lib/mysql # [내 컴퓨터 폴더]:[컨테이너 폴더]. -> 컨테이너를 지워도 데이터는 서버의 ./db_data 폴더에 남게 ehla
+      - mysql_data:/var/lib/mysql # [내 컴퓨터 폴더]:[컨테이너 폴더]. -> 컨테이너를 지워도 데이터는 서버의 ./db_data 폴더에 남게 ehla
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
                                  # (중요) ./db 폴더의 init.sql 파일을 넣어두면,
                                  # 처음 실행 시 테이블 생성과 초기 데이터 삽입이 자동으로 진행됩니다.
@@ -39,3 +39,6 @@ services: # 실행할 서비스(컨테이너)들의 목록
       db: # 'db' 서비스에 의존
         condition: service_healthy # 단순히 DB 컨테이너가 켜지는 걸 넘어, 'healthcheck'가 통과되어야 백엔드를 실행
                                    # "DB 연결 실패" 오류로 웹이 죽는 것을 방지
+
+volumes:
+  mysql_data:

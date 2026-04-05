@@ -1,0 +1,34 @@
+ <!-- 모든 페이지의 공통 뼈대, 내비게이션과 전체적인 레이아웃 담당 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Security Lab{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><a href="/">Web Hacking Lab</a></div>
+        <div class="nav-links">
+            {% if session.get('user_id') %}
+                <span style="color: #ccc; font-size: 0.9em;">{{ session['user_name'] }}님</span>
+                <a href="{{ url_for('auth.logout') }}">로그아웃</a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}">로그인</a>
+                <a href="{{ url_for('auth.signup') }}">회원가입</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Security Club Team2</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

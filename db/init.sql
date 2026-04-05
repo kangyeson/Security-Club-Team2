@@ -52,9 +52,11 @@ CREATE TABLE IF NOT EXISTS comment (
     FOREIGN KEY (parent_id) REFERENCES comment(comment_id)
 );
 
--- 초기 계정 데이터 (비밀번호는 평문 — 추후 해싱 적용)
+-- 초기 계정 데이터
+-- admin / user01~12: 테스트용 평문 비밀번호
+-- guest: 팀원 구현 계정 (werkzeug scrypt 해시)
 INSERT INTO users (user_id, password, name, role, email) VALUES
-    ('admin', 'admin1234!', '관리자', 'ADMIN', 'admin@security.lab'),
+    ('admin',  'admin1234!', '관리자', 'ADMIN', 'admin@security.lab'),
     ('user01', 'user1234!',  '홍길동', 'USER',  'user01@security.lab'),
     ('user02', 'user1234!',  '김철수', 'USER',  'user02@security.lab'),
     ('user03', 'user1234!',  '이영희', 'USER',  'user03@security.lab'),
@@ -66,4 +68,5 @@ INSERT INTO users (user_id, password, name, role, email) VALUES
     ('user09', 'user1234!',  '임현우', 'USER',  'user09@security.lab'),
     ('user10', 'user1234!',  '한소희', 'USER',  'user10@security.lab'),
     ('user11', 'user1234!',  '오태양', 'USER',  'user11@security.lab'),
-    ('user12', 'user1234!',  '신예원', 'USER',  'user12@security.lab');
+    ('user12', 'user1234!',  '신예원', 'USER',  'user12@security.lab'),
+    ('guest',  'scrypt:32768:8:1$EFk8kM1aFW6RFjZ4$946627173bd038456e98e5edd4131ecc17600ec44bbc62ec82a435875c93d18253b7fbd42a7a8445453418588d5cfa19763fc829d670b35865866516282f319d', '게스트', 'USER', 'guest@security-lab.kr');
