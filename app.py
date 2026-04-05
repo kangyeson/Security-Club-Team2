@@ -29,9 +29,9 @@ app.register_blueprint(board_bp)
 @app.context_processor
 def inject_user():
     return {
-        'is_admin':     session.get('role') == 'ADMIN',
+        'is_admin':     session.get('user_role') == 'ADMIN',
         'current_user': session.get('user_id'),
-        'current_role': session.get('role'),
+        'current_role': session.get('user_role'),
     }
 
 

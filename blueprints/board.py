@@ -96,7 +96,7 @@ def board_list():
 
     total_pages = math.ceil(total / per_page) if total > 0 else 1
 
-    is_admin = session.get('role') == 'ADMIN'
+    is_admin = session.get('user_role') == 'ADMIN'
     return render_template(
         'board/list.html',
         posts=posts,
@@ -152,5 +152,5 @@ def board_detail(board_id):
         if post[key]:
             post[key] = post[key].strftime('%Y-%m-%d %H:%M:%S')
 
-    is_admin = session.get('role') == 'ADMIN'
+    is_admin = session.get('user_role') == 'ADMIN'
     return render_template('board/detail.html', post=post, is_admin=is_admin)

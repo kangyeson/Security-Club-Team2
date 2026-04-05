@@ -37,7 +37,7 @@ from functools import wraps
 def admin_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if session.get('role') != 'ADMIN':
+        if session.get('user_role') != 'ADMIN':
             return jsonify({'error': '관리자 권한이 필요합니다.'}), 403
         return f(*args, **kwargs)
     return decorated
@@ -286,7 +286,7 @@ def create_notice():
     if not content:
         return jsonify({'error': '내용을 입력해주세요.'}), 400
 
-    user_idx = session.get('user_idx')
+    user_idx = session.get('user_no')
     if not user_idx:
         return jsonify({'error': '세션 정보가 없습니다. 다시 로그인해주세요.'}), 401
 
