@@ -43,6 +43,16 @@ def admin_required(f):
     return decorated
 
 
+# ── 페이지: 회원 목록 ─────────────────────────────────────────────────────────
+#
+# GET /admin/users/list
+
+@admin_bp.route('/users/list', methods=['GET'])
+@admin_required
+def user_list_page():
+    return render_template('admin/user_list.html')
+
+
 # ── API: 회원 목록 조회 ───────────────────────────────────────────────────────
 #
 # GET /admin/users

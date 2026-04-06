@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원 목록 | 관리자</title>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/admin_user_list.css">
+</head>
+<body>
+<div class="container">
+
+    <!-- 헤더 -->
+    <div class="page-header">
+        <a href="/board/" class="back-btn">← 게시판으로</a>
+        <h1>회원 목록</h1>
+    </div>
+
+    <!-- 검색 -->
+    <div class="search-bar">
+        <input type="text" id="searchInput" class="search-input" placeholder="이름으로 검색" value="">
+        <button class="search-btn" onclick="searchUsers()">검색</button>
+    </div>
+
+    <!-- 회원 테이블 -->
+    <table class="user-table">
+        <thead>
+            <tr>
+                <th class="col-no">번호</th>
+                <th class="col-id">아이디</th>
+                <th class="col-name">이름</th>
+                <th class="col-role">권한</th>
+                <th class="col-email">이메일</th>
+                <th class="col-date">가입일</th>
+            </tr>
+        </thead>
+        <tbody id="userTableBody">
+            <tr>
+                <td colspan="6" class="empty-msg">로딩 중...</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 페이지네이션 -->
+    <div class="pagination" id="pagination"></div>
+
+</div>
+
+<script>
+    let currentPage = 1;
+    let currentName = '';
+
+    // ── 페이지 로드 시 회원 목록 조회 ────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => loadUsers(1));
+
+    // 엔터키 검색
+    document.getElementById('searchInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') searchUsers();
+    });
+
+    function searchUsers() {
+        currentName = document.getElementById('searchInput').value.trim();
+        loadUsers(1);
+    }
+
+    async function loadUsers(page) {
+        currentPage = page;
+        const params = new URLSearchParams({ page, per_page: 15 });
+        if (currentName) params.append('name', currentName);
+
+        try {
+            const res  = await fetch(`/admin/users?${params}`);
+            const data = await res.json();
+
+            if (!res.ok) {
+                document.getElementById('userTableBody').innerHTML =
+                    `<tr><td colspan="6" class="empty-msg">오류: ${data.error}</td></tr>`;
+                return;
+            }
+
+            renderTable(data.users, data.pagination);
+            renderPagination(data.pagination);
+        } catch (err) {
+            document.getElementById('userTableBody').innerHTML =
+                `<tr><td colspan="6" class="empty-msg">네트워크 오류가 발생했습니다.</td></tr>`;
+        }
+    }
+
+    function renderTable(users, pagination) {
+        const tbody = document.getElementById('userTableBody');
+
+        if (users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">검색 결과가 없습니다.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = users.map((u, i) => {
+            const num = (pagination.page - 1) * pagination.per_page + i + 1;
+            const roleClass = u.role === 'ADMIN' ? 'badge-admin' : 'badge-user';
+            const roleText  = u.role === 'ADMIN' ? '관리자' : '일반';
+            const date = u.created_at ? u.created_at.substring(0, 10) : '—';
+
+            return `<tr class="user-row" onclick="location.href='/admin/users/${u.user_idx}/profile'">
+                <td class="col-no">${num}</td>
+                <td class="col-id">${u.user_id}</td>
+                <td class="col-name">${u.name}</td>
+                <td class="col-role"><span class="badge ${roleClass}">${roleText}</span></td>
+                <td class="col-email">${u.email || '—'}</td>
+                <td class="col-date">${date}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    function renderPagination(p) {
+        const div = document.getElementById('pagination');
+
+        if (p.total_pages <= 1) { div.innerHTML = ''; return; }
+
+        let html = '';
+
+        if (p.page > 1) {
+            html += `<button class="page-btn" onclick="loadUsers(${p.page - 1})">이전</button>`;
+        } else {
+            html += `<span class="page-btn disabled">이전</span>`;
+        }
+
+        for (let i = 1; i <= p.total_pages; i++) {
+            if (i === p.page) {
+                html += `<span class="page-btn active">${i}</span>`;
+            } else {
+                html += `<button class="page-btn" onclick="loadUsers(${i})">${i}</button>`;
+            }
+        }
+
+        if (p.page < p.total_pages) {
+            html += `<button class="page-btn" onclick="loadUsers(${p.page + 1})">다음</button>`;
+        } else {
+            html += `<span class="page-btn disabled">다음</span>`;
+        }
+
+        div.innerHTML = html;
+    }
+</script>
+</body>
+</html>
