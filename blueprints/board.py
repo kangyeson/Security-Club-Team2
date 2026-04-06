@@ -4,7 +4,7 @@ import uuid
 from functools import wraps
 
 import pymysql
-from flask import (Blueprint, abort, current_app, g, redirect,
+from flask import (Blueprint, abort, current_app, g, jsonify, redirect,
                    render_template, request, session, url_for, flash)
 from werkzeug.utils import secure_filename
 
@@ -144,6 +144,21 @@ def board_detail(board_id):
         )
         post = cursor.fetchone()
 
+        cursor.execute(
+            'SELECT COUNT(*) AS cnt FROM board_like WHERE board_id = %s',
+            (board_id,),
+        )
+        like_count = cursor.fetchone()['cnt']
+
+        user_no = session.get('user_no')
+        user_liked = False
+        if user_no:
+            cursor.execute(
+                'SELECT 1 FROM board_like WHERE user_idx = %s AND board_id = %s',
+                (user_no, board_id),
+            )
+            user_liked = cursor.fetchone() is not None
+
     db.commit()
 
     if post is None:
@@ -158,7 +173,47 @@ def board_detail(board_id):
         post=post,
         current_user_no=session.get('user_no'),
         current_role=session.get('user_role'),
+        like_count=like_count,
+        user_liked=user_liked,
     )
+
+
+# ── 게시글 추천 토글 ─────────────────────────────────────────────────────────
+# POST /board/<id>/like
+
+@board_bp.route('/<int:board_id>/like', methods=['POST'])
+@login_required
+def board_like(board_id):
+    user_no = session.get('user_no')
+    db = get_db()
+    with db.cursor() as cursor:
+        cursor.execute(
+            'SELECT 1 FROM board_like WHERE user_idx = %s AND board_id = %s',
+            (user_no, board_id),
+        )
+        existing = cursor.fetchone()
+
+        if existing:
+            cursor.execute(
+                'DELETE FROM board_like WHERE user_idx = %s AND board_id = %s',
+                (user_no, board_id),
+            )
+            liked = False
+        else:
+            cursor.execute(
+                'INSERT INTO board_like (user_idx, board_id) VALUES (%s, %s)',
+                (user_no, board_id),
+            )
+            liked = True
+
+        cursor.execute(
+            'SELECT COUNT(*) AS cnt FROM board_like WHERE board_id = %s',
+            (board_id,),
+        )
+        count = cursor.fetchone()['cnt']
+
+    db.commit()
+    return jsonify({'liked': liked, 'count': count})
 
 
 # ── 게시글 작성 ───────────────────────────────────────────────────────────────
@@ -308,6 +363,7 @@ def board_delete(board_id):
             # 댓글 FK 정리 후 게시글 삭제
             cursor.execute('UPDATE comment SET parent_id = NULL WHERE board_id = %s', (board_id,))
             cursor.execute('DELETE FROM comment WHERE board_id = %s', (board_id,))
+            cursor.execute('DELETE FROM board_like WHERE board_id = %s', (board_id,))
             cursor.execute('DELETE FROM board WHERE board_id = %s', (board_id,))
             if post['file_id']:
                 cursor.execute('DELETE FROM file WHERE file_id = %s', (post['file_id'],))

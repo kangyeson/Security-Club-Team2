@@ -60,6 +60,20 @@
     </div>
     {% endif %}
 
+    <!-- 추천 -->
+    <div class="like-section">
+        {% if current_user_no %}
+        <button id="likeBtn" class="like-btn {% if user_liked %}liked{% endif %}"
+                onclick="toggleLike()">
+            ♥ <span id="likeCount">{{ like_count }}</span>
+        </button>
+        {% else %}
+        <button class="like-btn" onclick="alert('로그인 후 추천할 수 있습니다.')">
+            ♥ <span>{{ like_count }}</span>
+        </button>
+        {% endif %}
+    </div>
+
     <!-- 에러 메시지 -->
     <div id="errorMsg" class="error-msg hidden"></div>
 
@@ -175,6 +189,22 @@ function showError(msg) {
 }
 function hideError() {
     document.getElementById('errorMsg').classList.add('hidden');
+}
+
+// ── 추천 토글 ─────────────────────────────────────────────────────────────────
+async function toggleLike() {
+    const btn = document.getElementById('likeBtn');
+    btn.disabled = true;
+    try {
+        const res = await fetch(`/board/${boardId}/like`, { method: 'POST' });
+        const data = await res.json();
+        document.getElementById('likeCount').textContent = data.count;
+        btn.classList.toggle('liked', data.liked);
+    } catch {
+        alert('오류가 발생했습니다.');
+    } finally {
+        btn.disabled = false;
+    }
 }
 </script>
 {% endblock %}

@@ -145,6 +145,45 @@
     min-height: 240px;
 }
 
+/* 추천 버튼 */
+.like-section {
+    display: flex;
+    justify-content: center;
+    margin-top: 32px;
+}
+
+.like-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 28px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid #e9d5ff;
+    border-radius: 999px;
+    background: #faf5ff;
+    color: #9ca3af;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.like-btn:hover {
+    border-color: #7c3aed;
+    color: #7c3aed;
+    background: #f3e8ff;
+}
+
+.like-btn.liked {
+    background: #7c3aed;
+    border-color: #7c3aed;
+    color: #fff;
+}
+
+.like-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* 에러 메시지 */
 .error-msg {
     color: #e53e3e;

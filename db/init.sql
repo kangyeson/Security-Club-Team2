@@ -38,6 +38,16 @@ CREATE TABLE IF NOT EXISTS board (
     FOREIGN KEY (file_id)  REFERENCES file(file_id)
 );
 
+-- 게시글 추천 테이블
+CREATE TABLE IF NOT EXISTS board_like (
+    user_idx   BIGINT   NOT NULL,
+    board_id   BIGINT   NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_idx, board_id),
+    FOREIGN KEY (user_idx) REFERENCES users(user_idx) ON DELETE CASCADE,
+    FOREIGN KEY (board_id) REFERENCES board(board_id) ON DELETE CASCADE
+);
+
 -- 댓글 테이블
 CREATE TABLE IF NOT EXISTS comment (
     comment_id  BIGINT       NOT NULL AUTO_INCREMENT,
