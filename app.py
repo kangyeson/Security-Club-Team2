@@ -44,10 +44,6 @@ def inject_user():
 def home():
     return render_template('index.html')
 
-@app.route('/login')
-def login():
-    return render_template('login.html')
-
 
 # ── 에러 핸들러 ───────────────────────────────────────────────────────────────
 @app.errorhandler(404)
