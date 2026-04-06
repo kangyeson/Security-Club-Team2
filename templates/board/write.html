@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}{% if mode == 'edit' %}게시글 수정{% else %}글쓰기{% endif %} - Security Lab{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/notice_write.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <a href="{{ url_for('board.board_list') }}" class="back-btn">← 목록</a>
+    <h1>{% if mode == 'edit' %}게시글 수정{% else %}글쓰기{% endif %}</h1>
+</div>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="error-msg" style="margin-bottom:12px;">{{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<form class="notice-form"
+      method="POST"
+      action="{% if mode == 'edit' %}{{ url_for('board.board_edit', board_id=post.board_id) }}{% else %}{{ url_for('board.board_write') }}{% endif %}"
+      enctype="multipart/form-data">
+
+    <!-- 제목 -->
+    <div class="form-group">
+        <label class="form-label" for="title">제목</label>
+        <input
+            type="text"
+            id="title"
+            name="title"
+            class="form-input"
+            maxlength="200"
+            placeholder="제목을 입력하세요"
+            value="{{ post.title if post else '' }}"
+            required
+        >
+    </div>
+
+    <!-- 내용 -->
+    <div class="form-group">
+        <label class="form-label" for="content">내용</label>
+        <textarea
+            id="content"
+            name="content"
+            class="form-textarea"
+            rows="14"
+            placeholder="내용을 입력하세요"
+            required
+        >{{ post.content if post else '' }}</textarea>
+    </div>
+
+    <!-- 파일 첨부 -->
+    <div class="form-group">
+        <label class="form-label">
+            첨부파일 <span class="optional-tag">(선택, 최대 50MB)</span>
+        </label>
+
+        {% if mode == 'edit' and post.file_name %}
+        <div class="current-file">
+            <span>현재 파일: </span>
+            <a href="{{ post.file_path }}" download="{{ post.file_name }}" class="attachment-link">{{ post.file_name }}</a>
+            <span style="font-size:0.8em; color:#aaa;"> (새 파일 선택 시 교체됩니다)</span>
+        </div>
+        {% endif %}
+
+        <div class="file-upload-area" id="fileUploadArea" onclick="document.getElementById('fileInput').click()">
+            <input type="file" id="fileInput" name="file" class="file-input-hidden"
+                   onchange="onFileSelected(this)">
+            <div id="filePlaceholder" class="file-upload-placeholder">
+                <span class="file-upload-icon">📁</span>
+                <span class="file-upload-text">클릭하여 파일 선택</span>
+                <span class="file-upload-hint">또는 파일을 여기로 드래그</span>
+            </div>
+            <div id="fileSelectedInfo" class="file-selected-info hidden">
+                <span class="file-icon">📄</span>
+                <span class="file-name" id="selectedFileName"></span>
+                <span class="file-size" id="selectedFileSize"></span>
+                <button type="button" class="file-remove-btn"
+                        onclick="event.stopPropagation(); removeFile()">✕</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <a href="{{ url_for('board.board_list') }}" class="cancel-btn">취소</a>
+        <button type="submit" class="submit-btn">
+            {% if mode == 'edit' %}수정 완료{% else %}등록{% endif %}
+        </button>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 드래그 앤 드롭
+const area = document.getElementById('fileUploadArea');
+area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('drag-over'); });
+area.addEventListener('dragleave', () => area.classList.remove('drag-over'));
+area.addEventListener('drop', e => {
+    e.preventDefault();
+    area.classList.remove('drag-over');
+    const input = document.getElementById('fileInput');
+    if (e.dataTransfer.files.length) {
+        input.files = e.dataTransfer.files;
+        onFileSelected(input);
+    }
+});
+
+function onFileSelected(input) {
+    if (!input.files.length) return;
+    const file = input.files[0];
+    document.getElementById('filePlaceholder').classList.add('hidden');
+    document.getElementById('fileSelectedInfo').classList.remove('hidden');
+    document.getElementById('selectedFileName').textContent = file.name;
+    document.getElementById('selectedFileSize').textContent = formatSize(file.size);
+}
+
+function removeFile() {
+    document.getElementById('fileInput').value = '';
+    document.getElementById('filePlaceholder').classList.remove('hidden');
+    document.getElementById('fileSelectedInfo').classList.add('hidden');
+}
+
+function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+}
+</script>
+{% endblock %}
