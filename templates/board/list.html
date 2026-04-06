@@ -15,6 +15,7 @@
         <h1 class="board-title">게시판</h1>
         <span class="total-count">총 {{ total }}개</span>
         {% if is_admin %}
+        <a href="/admin/users/list" class="btn-user-list">회원 관리</a>
         <a href="/admin/notices/new" class="btn-notice-write">공지 작성</a>
         {% endif %}
     </div>
