@@ -15,13 +15,15 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 # ── 블루프린트 등록 ────────────────────────────────────────────────────────────
-from blueprints.auth.routes import auth_bp   # /auth/*  (로그인, 회원가입, 아이디/비밀번호 찾기)
-from blueprints.admin import admin_bp        # /admin/* (관리자 API + 페이지)
-from blueprints.board import board_bp        # /board/* (게시판 목록·상세)
+from blueprints.auth.routes import auth_bp   # /auth/*   (로그인, 회원가입, 아이디/비밀번호 찾기)
+from blueprints.admin import admin_bp        # /admin/*  (관리자 API + 페이지)
+from blueprints.board import board_bp        # /board/*  (게시판 목록·상세)
+from blueprints.mypage import mypage_bp      # /mypage/* (마이페이지)
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(board_bp)
+app.register_blueprint(mypage_bp)
 
 
 # ── 템플릿 전역 컨텍스트 ──────────────────────────────────────────────────────
