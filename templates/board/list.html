@@ -13,6 +13,9 @@
     <h1 class="board-title">게시판</h1>
     <span class="total-count">총 {{ total }}개</span>
 
+    {% if is_admin %}
+    <a href="{{ url_for('admin.notice_write_page') }}" class="write-btn notice-btn">공지 작성하기</a>
+    {% endif %}
     {% if current_user %}
     <a href="{{ url_for('board.board_write') }}" class="write-btn">글쓰기</a>
     {% endif %}

@@ -176,6 +176,8 @@
     white-space: nowrap;
 }
 .write-btn:hover { background: #6d28d9; }
+.notice-btn { background: #1e40af; }
+.notice-btn:hover { background: #1e3a8a; }
 
 /* 검색 폼 */
 .search-form {

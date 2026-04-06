@@ -359,3 +359,14 @@
 .hidden {
     display: none !important;
 }
+/* 수정 폼의 현재 파일 표시 */
+.current-file {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 8px;
+}
+.current-file .attachment-link {
+    color: #7c3aed;
+    text-decoration: none;
+}
+.current-file .attachment-link:hover { text-decoration: underline; }

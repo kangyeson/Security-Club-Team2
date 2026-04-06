@@ -12,7 +12,7 @@
         <div class="logo"><a href="/">Web Hacking Lab</a></div>
         <div class="nav-links">
             {% if session.get('user_id') %}
-                <span style="color: #ccc; font-size: 0.9em;">{{ session['user_name'] }}님</span>
+                <span style="color: #ccc; font-size: 0.9em;">{{ session.get('user_name', '') }}님</span>
                 <a href="{{ url_for('auth.logout') }}">로그아웃</a>
             {% else %}
                 <a href="{{ url_for('auth.login') }}">로그인</a>

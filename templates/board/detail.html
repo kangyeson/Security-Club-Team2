@@ -1,121 +1,103 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ post.title }} | 게시판</title>
-    <link rel="stylesheet" href="/static/css/common.css">
-    <link rel="stylesheet" href="/static/css/board_detail.css">
-</head>
-<body>
-<div class="container">
+{% extends "base.html" %}
 
-    <!-- 상단 네비 -->
-    <div class="page-nav">
-        <a href="/board/" class="back-btn">← 목록으로</a>
+{% block title %}{{ post.title }} | 게시판{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/board_detail.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- 상단 네비 -->
+<div class="page-nav">
+    <a href="{{ url_for('board.board_list') }}" class="back-btn">← 목록으로</a>
+</div>
+
+<!-- 게시글 카드 -->
+<article class="post-card">
+
+    {% if post.type == 'NOTICE' %}
+    <div class="type-badge-wrap">
+        <span class="notice-badge">📌 공지사항</span>
+    </div>
+    {% endif %}
+
+    <!-- 제목 (보기 / 편집) -->
+    <h1 id="viewTitle" class="post-title {% if post.author_role == 'ADMIN' %}title-admin{% endif %}">
+        {{ post.title }}
+    </h1>
+    <input id="editTitle" type="text" class="edit-title-input hidden" maxlength="200" value="{{ post.title }}">
+
+    <!-- 메타 정보 -->
+    <div class="post-meta">
+        <span class="meta-author {% if post.author_role == 'ADMIN' %}meta-author-admin{% endif %}">
+            {{ post.author_name }}
+            {% if post.author_role == 'ADMIN' %}<span class="admin-tag">관리자</span>{% endif %}
+        </span>
+        <span class="meta-sep">·</span>
+        <span class="meta-date">{{ post.created_at }}</span>
+        {% if post.updated_at and post.updated_at != post.created_at %}
+        <span class="meta-sep">·</span>
+        <span class="meta-edited">수정됨 {{ post.updated_at }}</span>
+        {% endif %}
+        <span class="meta-sep">·</span>
+        <span class="meta-view">조회 {{ post.view }}</span>
     </div>
 
-    <!-- 게시글 카드 -->
-    <article class="post-card">
+    <hr class="divider">
 
-        <!-- 타입 배지 -->
-        {% if post.type == 'NOTICE' %}
-        <div class="type-badge-wrap">
-            <span class="notice-badge">📌 공지사항</span>
-        </div>
-        {% endif %}
+    <!-- 본문 (보기 / 편집) -->
+    <div id="viewContent" class="post-content">{{ post.content }}</div>
+    <textarea id="editContent" class="edit-content-textarea hidden" rows="14">{{ post.content }}</textarea>
 
-        <!-- ── 제목 영역 ── -->
-        <!-- 보기 모드 -->
-        <h1 id="viewTitle" class="post-title
-            {% if post.author_role == 'ADMIN' %}title-admin{% endif %}
-        ">{{ post.title }}</h1>
+    <!-- 첨부파일 -->
+    {% if post.file_name and post.file_path %}
+    <div class="attachment-box">
+        <span class="attachment-label">📎 첨부파일</span>
+        <a href="{{ post.file_path }}" class="attachment-link" download="{{ post.file_name }}">
+            {{ post.file_name }}
+        </a>
+    </div>
+    {% endif %}
 
-        <!-- 편집 모드 (기본 숨김) -->
-        <input
-            id="editTitle"
-            type="text"
-            class="edit-title-input hidden"
-            maxlength="200"
-            placeholder="제목을 입력하세요"
-        >
+    <!-- 에러 메시지 -->
+    <div id="errorMsg" class="error-msg hidden"></div>
 
-        <!-- 메타 정보 -->
-        <div class="post-meta">
-            <span class="meta-author
-                {% if post.author_role == 'ADMIN' %}meta-author-admin{% endif %}
-            ">
-                {{ post.author_name }}
-                {% if post.author_role == 'ADMIN' %}
-                    <span class="admin-tag">관리자</span>
-                {% endif %}
-            </span>
-            <span class="meta-sep">·</span>
-            <span class="meta-date">{{ post.created_at }}</span>
-            {% if post.updated_at and post.updated_at != post.created_at %}
-            <span class="meta-sep">·</span>
-            <span class="meta-edited">수정됨 {{ post.updated_at }}</span>
-            {% endif %}
-            <span class="meta-sep">·</span>
-            <span class="meta-view">조회 {{ post.view }}</span>
-        </div>
+    <!-- 하단 버튼 -->
+    <div class="post-footer">
 
-        <hr class="divider">
-
-        <!-- ── 본문 영역 ── -->
-        <!-- 보기 모드 -->
-        <div id="viewContent" class="post-content">{{ post.content }}</div>
-
-        <!-- 편집 모드 (기본 숨김) -->
-        <textarea
-            id="editContent"
-            class="edit-content-textarea hidden"
-            rows="14"
-            placeholder="내용을 입력하세요"
-        ></textarea>
-
-        <!-- ── 첨부파일 ── -->
-        {% if post.file_name and post.file_path %}
-        <div class="attachment-box">
-            <span class="attachment-label">📎 첨부파일</span>
-            <a href="{{ post.file_path }}" class="attachment-link" download="{{ post.file_name }}">
-                {{ post.file_name }}
+        {# 일반 게시글: 작성자 또는 관리자만 수정/삭제 #}
+        {% if post.type == 'NORMAL' and (current_user_no == post.author_idx or current_role == 'ADMIN') %}
+        <div id="viewButtons" class="view-buttons">
+            <button class="delete-btn" onclick="openDeleteModal()">삭제</button>
+            <a href="{{ url_for('board.board_edit', board_id=post.board_id) }}"
+               class="edit-btn" style="display:inline-block; text-decoration:none; padding:10px 26px;">
+                수정하기
             </a>
         </div>
         {% endif %}
 
-        <!-- 에러 메시지 -->
-        <div id="errorMsg" class="error-msg hidden"></div>
-
-        <!-- ── 버튼 영역 ── -->
-        <div class="post-footer">
-
-            {% if is_admin and post.type == 'NOTICE' %}
-            <!-- 보기 모드: 수정하기 + 삭제 버튼 -->
-            <div id="viewButtons" class="view-buttons">
-                <button class="delete-btn" onclick="openDeleteModal()">삭제</button>
-                <button id="editBtn" class="edit-btn" onclick="enterEditMode()">수정하기</button>
-            </div>
-
-            <!-- 편집 모드: 취소 + 완료 버튼 (기본 숨김) -->
-            <div id="saveSection" class="save-section hidden">
-                <button class="cancel-edit-btn" onclick="cancelEdit()">취소</button>
-                <button id="saveBtn" class="save-btn" onclick="saveEdit()">완료</button>
-            </div>
-            {% endif %}
-
+        {# 공지사항: 관리자만 인라인 수정/삭제 #}
+        {% if post.type == 'NOTICE' and current_role == 'ADMIN' %}
+        <div id="viewButtons" class="view-buttons">
+            <button class="delete-btn" onclick="openDeleteModal()">삭제</button>
+            <button id="editBtn" class="edit-btn" onclick="enterEditMode()">수정하기</button>
         </div>
-    </article>
+        <div id="saveSection" class="save-section hidden">
+            <button class="cancel-edit-btn" onclick="cancelEdit()">취소</button>
+            <button id="saveBtn" class="save-btn" onclick="saveNoticeEdit()">완료</button>
+        </div>
+        {% endif %}
 
-</div>
+    </div>
+</article>
 
-{% if is_admin and post.type == 'NOTICE' %}
-<!-- 공지 삭제 확인 모달 -->
+<!-- 게시글 삭제 확인 모달 -->
 <div id="deleteModal" class="modal-overlay hidden">
     <div class="modal-box">
         <div class="modal-icon">⚠</div>
-        <p class="modal-title">공지를 삭제하시겠습니까?</p>
-        <p class="modal-desc">댓글 등 연관 데이터가 모두 영구 삭제됩니다.</p>
+        <p class="modal-title">게시글을 삭제하시겠습니까?</p>
+        <p class="modal-desc">삭제 후 복구할 수 없습니다.</p>
         <div id="deleteError" class="modal-error hidden"></div>
         <div class="modal-actions">
             <button class="modal-cancel-btn" onclick="closeDeleteModal()">취소</button>
@@ -123,123 +105,76 @@
         </div>
     </div>
 </div>
-{% endif %}
 
+{% endblock %}
+
+
+{% block extra_js %}
 <script>
-    const boardId = {{ post.board_id }};
+const boardId = {{ post.board_id }};
 
-    // 원본 값 저장 (취소 시 복원)
-    const originalTitle   = document.getElementById('viewTitle').textContent.trim();
-    const originalContent = document.getElementById('viewContent').textContent.trim();
+// ── 게시글 삭제 모달 ─────────────────────────────────────────────────────────
+function openDeleteModal() {
+    document.getElementById('deleteError').classList.add('hidden');
+    document.getElementById('deleteConfirmBtn').disabled = false;
+    document.getElementById('deleteConfirmBtn').textContent = '삭제';
+    document.getElementById('deleteModal').classList.remove('hidden');
+}
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+}
+function executeDelete() {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/board/${boardId}/delete`;
+    document.body.appendChild(form);
+    form.submit();
+}
 
-    // ── 편집 모드 전환 ─────────────────────────────────────────────────────────
-    function enterEditMode() {
-        document.getElementById('editTitle').value = originalTitle;
-        document.getElementById('viewTitle').classList.add('hidden');
-        document.getElementById('editTitle').classList.remove('hidden');
+// ── 공지사항 인라인 수정 (관리자) ─────────────────────────────────────────────
+function enterEditMode() {
+    document.getElementById('viewTitle').classList.add('hidden');
+    document.getElementById('editTitle').classList.remove('hidden');
+    document.getElementById('viewContent').classList.add('hidden');
+    document.getElementById('editContent').classList.remove('hidden');
+    document.getElementById('viewButtons').classList.add('hidden');
+    document.getElementById('saveSection').classList.remove('hidden');
+}
+function cancelEdit() {
+    document.getElementById('editTitle').classList.add('hidden');
+    document.getElementById('viewTitle').classList.remove('hidden');
+    document.getElementById('editContent').classList.add('hidden');
+    document.getElementById('viewContent').classList.remove('hidden');
+    document.getElementById('saveSection').classList.add('hidden');
+    document.getElementById('viewButtons').classList.remove('hidden');
+    hideError();
+}
+async function saveNoticeEdit() {
+    const title = document.getElementById('editTitle').value.trim();
+    const content = document.getElementById('editContent').value.trim();
+    if (!title) { showError('제목을 입력해주세요.'); return; }
+    if (!content) { showError('내용을 입력해주세요.'); return; }
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true; btn.textContent = '저장 중...';
+    try {
+        const res = await fetch(`/admin/notices/${boardId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, content }),
+        });
+        const data = await res.json();
+        if (!res.ok) { showError(data.error || '수정 중 오류가 발생했습니다.'); return; }
+        location.reload();
+    } catch { showError('네트워크 오류가 발생했습니다.'); }
+    finally { btn.disabled = false; btn.textContent = '완료'; }
+}
 
-        document.getElementById('editContent').value = originalContent;
-        document.getElementById('viewContent').classList.add('hidden');
-        document.getElementById('editContent').classList.remove('hidden');
-
-        document.getElementById('viewButtons').classList.add('hidden');
-        document.getElementById('saveSection').classList.remove('hidden');
-        hideError();
-    }
-
-    function cancelEdit() {
-        document.getElementById('editTitle').classList.add('hidden');
-        document.getElementById('viewTitle').classList.remove('hidden');
-
-        document.getElementById('editContent').classList.add('hidden');
-        document.getElementById('viewContent').classList.remove('hidden');
-
-        document.getElementById('saveSection').classList.add('hidden');
-        document.getElementById('viewButtons').classList.remove('hidden');
-        hideError();
-    }
-
-    async function saveEdit() {
-        const title   = document.getElementById('editTitle').value.trim();
-        const content = document.getElementById('editContent').value.trim();
-
-        if (!title)   { showError('제목을 입력해주세요.');  return; }
-        if (!content) { showError('내용을 입력해주세요.'); return; }
-
-        const saveBtn = document.getElementById('saveBtn');
-        saveBtn.disabled    = true;
-        saveBtn.textContent = '저장 중...';
-
-        try {
-            const res  = await fetch(`/admin/notices/${boardId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, content }),
-            });
-            const data = await res.json();
-
-            if (!res.ok) { showError(data.error || '수정 중 오류가 발생했습니다.'); return; }
-            location.reload();
-        } catch (err) {
-            showError('네트워크 오류가 발생했습니다.');
-        } finally {
-            saveBtn.disabled    = false;
-            saveBtn.textContent = '완료';
-        }
-    }
-
-    // ── 삭제 모달 ──────────────────────────────────────────────────────────────
-    function openDeleteModal() {
-        document.getElementById('deleteError').classList.add('hidden');
-        document.getElementById('deleteConfirmBtn').disabled    = false;
-        document.getElementById('deleteConfirmBtn').textContent = '삭제';
-        document.getElementById('deleteModal').classList.remove('hidden');
-    }
-
-    function closeDeleteModal() {
-        document.getElementById('deleteModal').classList.add('hidden');
-    }
-
-    async function executeDelete() {
-        const btn = document.getElementById('deleteConfirmBtn');
-        btn.disabled    = true;
-        btn.textContent = '삭제 중...';
-        document.getElementById('deleteError').classList.add('hidden');
-
-        try {
-            const res  = await fetch(`/admin/board/${boardId}`, { method: 'DELETE' });
-            const data = await res.json();
-
-            if (!res.ok) {
-                const errEl = document.getElementById('deleteError');
-                errEl.textContent = data.error || '삭제 중 오류가 발생했습니다.';
-                errEl.classList.remove('hidden');
-                btn.disabled    = false;
-                btn.textContent = '삭제';
-                return;
-            }
-
-            // 성공 → 목록으로 이동
-            window.location.href = '/board/';
-        } catch (err) {
-            const errEl = document.getElementById('deleteError');
-            errEl.textContent = '네트워크 오류가 발생했습니다.';
-            errEl.classList.remove('hidden');
-            btn.disabled    = false;
-            btn.textContent = '삭제';
-        }
-    }
-
-    // ── 유틸 ───────────────────────────────────────────────────────────────────
-    function showError(msg) {
-        const el = document.getElementById('errorMsg');
-        el.textContent = msg;
-        el.classList.remove('hidden');
-    }
-
-    function hideError() {
-        document.getElementById('errorMsg').classList.add('hidden');
-    }
+function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = msg; el.classList.remove('hidden');
+}
+function hideError() {
+    document.getElementById('errorMsg').classList.add('hidden');
+}
 </script>
-</body>
-</html>
+{% endblock %}

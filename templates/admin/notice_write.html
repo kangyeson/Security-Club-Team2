@@ -1,89 +1,90 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>공지 작성 | 관리자</title>
-    <link rel="stylesheet" href="/static/css/common.css">
-    <link rel="stylesheet" href="/static/css/notice_write.css">
-</head>
-<body>
-<div class="container">
+{% extends "base.html" %}
 
-    <!-- 헤더 -->
-    <div class="page-header">
-        <a href="/board/" class="back-btn">← 게시판으로</a>
-        <h1>공지 작성</h1>
-    </div>
+{% block title %}공지 작성 | 관리자{% endblock %}
 
-    <!-- 안내 배지 -->
-    <div class="notice-badge-wrap">
-        <span class="notice-prefix-badge">[공지사항]</span>
-        <span class="notice-hint">제목 앞에 자동으로 붙습니다</span>
-    </div>
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/notice_write.css') }}">
+{% endblock %}
 
-    <!-- 작성 폼 (multipart/form-data — 파일 첨부용) -->
-    <form id="noticeForm" class="notice-form" enctype="multipart/form-data">
-        <div class="form-group">
-            <label for="title" class="form-label">제목</label>
-            <input
-                type="text"
-                id="title"
-                name="title"
-                class="form-input"
-                placeholder="공지 제목을 입력하세요"
-                maxlength="195"
-                required
-            >
-        </div>
+{% block content %}
 
-        <div class="form-group">
-            <label for="content" class="form-label">내용</label>
-            <textarea
-                id="content"
-                name="content"
-                class="form-textarea"
-                placeholder="공지 내용을 입력하세요"
-                rows="12"
-                required
-            ></textarea>
-        </div>
-
-        <!-- 파일 첨부 -->
-        <div class="form-group">
-            <label class="form-label">파일 첨부 <span class="optional-tag">선택</span></label>
-            <div class="file-upload-area" id="fileUploadArea">
-                <input
-                    type="file"
-                    id="fileInput"
-                    name="file"
-                    class="file-input-hidden"
-                    onchange="onFileSelected(this)"
-                >
-                <div class="file-upload-placeholder" id="filePlaceholder" onclick="document.getElementById('fileInput').click()">
-                    <span class="file-upload-icon">📎</span>
-                    <span class="file-upload-text">클릭하여 파일 선택</span>
-                    <span class="file-upload-hint">모든 파일 형식 지원</span>
-                </div>
-                <div class="file-selected-info hidden" id="fileSelectedInfo">
-                    <span class="file-icon">📄</span>
-                    <span class="file-name" id="selectedFileName"></span>
-                    <span class="file-size" id="selectedFileSize"></span>
-                    <button type="button" class="file-remove-btn" onclick="removeFile()">✕</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="errorMsg" class="error-msg hidden"></div>
-
-        <div class="form-actions">
-            <a href="/board/" class="cancel-btn">취소</a>
-            <button type="submit" id="submitBtn" class="submit-btn">공지 등록</button>
-        </div>
-    </form>
-
+<!-- 헤더 -->
+<div class="page-header">
+    <a href="{{ url_for('board.board_list') }}" class="back-btn">← 게시판으로</a>
+    <h1>공지 작성</h1>
 </div>
 
+<!-- 안내 배지 -->
+<div class="notice-badge-wrap">
+    <span class="notice-prefix-badge">[공지사항]</span>
+    <span class="notice-hint">제목 앞에 자동으로 붙습니다</span>
+</div>
+
+<!-- 작성 폼 (multipart/form-data — 파일 첨부용) -->
+<form id="noticeForm" class="notice-form" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="title" class="form-label">제목</label>
+        <input
+            type="text"
+            id="title"
+            name="title"
+            class="form-input"
+            placeholder="공지 제목을 입력하세요"
+            maxlength="195"
+            required
+        >
+    </div>
+
+    <div class="form-group">
+        <label for="content" class="form-label">내용</label>
+        <textarea
+            id="content"
+            name="content"
+            class="form-textarea"
+            placeholder="공지 내용을 입력하세요"
+            rows="12"
+            required
+        ></textarea>
+    </div>
+
+     <!-- 파일 첨부 -->
+    <div class="form-group">
+        <label class="form-label">파일 첨부 <span class="optional-tag">선택</span></label>
+        <div class="file-upload-area" id="fileUploadArea">
+            <input
+                type="file"
+                id="fileInput"
+                name="file"
+                class="file-input-hidden"
+                onchange="onFileSelected(this)"
+            >
+            <div class="file-upload-placeholder" id="filePlaceholder"
+                 onclick="document.getElementById('fileInput').click()">
+                <span class="file-upload-icon">📎</span>
+                <span class="file-upload-text">클릭하여 파일 선택</span>
+                <span class="file-upload-hint">모든 파일 형식 지원</span>
+            </div>
+            <div class="file-selected-info hidden" id="fileSelectedInfo">
+                <span class="file-icon">📄</span>
+                <span class="file-name" id="selectedFileName"></span>
+                <span class="file-size" id="selectedFileSize"></span>
+                <button type="button" class="file-remove-btn" onclick="removeFile()">✕</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="errorMsg" class="error-msg hidden"></div>
+
+    <div class="form-actions">
+        <a href="{{ url_for('board.board_list') }}" class="cancel-btn">취소</a>
+        <button type="submit" id="submitBtn" class="submit-btn">공지 등록</button>
+    </div>
+</form>
+
+{% endblock %}
+
+
+{% block extra_js %}
 <script>
     // ── 파일 선택 ─────────────────────────────────────────────────────────────
     function onFileSelected(input) {
@@ -139,8 +140,8 @@
         const title   = document.getElementById('title').value.trim();
         const content = document.getElementById('content').value.trim();
 
-        if (!title)   { showError('제목을 입력해주세요.');   return; }
-        if (!content) { showError('내용을 입력해주세요.');   return; }
+        if (!title)   { showError('제목을 입력해주세요.');  return; }
+        if (!content) { showError('내용을 입력해주세요.'); return; }
 
         submitBtn.disabled    = true;
         submitBtn.textContent = '등록 중...';
@@ -154,7 +155,7 @@
 
             if (!res.ok) { showError(data.error || '등록 중 오류가 발생했습니다.'); return; }
 
-            window.location.href = '/board/';
+            window.location.href = '{{ url_for("board.board_list") }}';
         } catch (err) {
             showError('네트워크 오류가 발생했습니다.');
         } finally {
@@ -168,5 +169,4 @@
         errorMsg.classList.remove('hidden');
     }
 </script>
-</body>
-</html>
+{% endblock %}
