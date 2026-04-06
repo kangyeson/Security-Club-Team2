@@ -23,6 +23,23 @@
     color: #888;
 }
 
+.btn-notice-write {
+    margin-left: auto;
+    padding: 8px 18px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #fff;
+    background: #7c3aed;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn-notice-write:hover {
+    background: #6d28d9;
+}
+
 /* 게시글 테이블 */
 .board-table {
     width: 100%;

@@ -14,6 +14,9 @@
     <div class="board-header">
         <h1 class="board-title">게시판</h1>
         <span class="total-count">총 {{ total }}개</span>
+        {% if is_admin %}
+        <a href="/admin/notices/new" class="btn-notice-write">공지 작성</a>
+        {% endif %}
     </div>
 
     <!-- 게시글 테이블 -->
