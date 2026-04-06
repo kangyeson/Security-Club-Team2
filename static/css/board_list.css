@@ -161,6 +161,57 @@
     pointer-events: none;
 }
 
+/* 글쓰기 버튼 */
+.write-btn {
+    margin-left: auto;
+    padding: 7px 18px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    background: #7c3aed;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.write-btn:hover { background: #6d28d9; }
+
+/* 검색 폼 */
+.search-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.search-input {
+    flex: 1;
+    max-width: 320px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    outline: none;
+}
+.search-input:focus { border-color: #7c3aed; }
+.search-btn {
+    padding: 8px 18px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    background: #7c3aed;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.search-btn:hover { background: #6d28d9; }
+.search-reset {
+    font-size: 0.82rem;
+    color: #aaa;
+    text-decoration: none;
+}
+.search-reset:hover { color: #e53e3e; }
+
 /* ── 우클릭 컨텍스트 메뉴 ─────────────────────────────────────── */
 .context-menu {
     position: absolute;
