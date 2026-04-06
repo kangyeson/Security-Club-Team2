@@ -12,8 +12,13 @@
         <div class="logo"><a href="/">Web Hacking Lab</a></div>
         <div class="nav-links">
             {% if session.get('user_id') %}
-                <span style="color: #ccc; font-size: 0.9em;">{{ session.get('user_name', '') }}님</span>
-                <a href="{{ url_for('auth.logout') }}">로그아웃</a>
+                <div class="nav-user-menu">
+                    <button class="nav-user-btn">{{ session.get('user_name', '') }}님 ▾</button>
+                    <div class="nav-dropdown">
+                        <a href="{{ url_for('mypage.mypage') }}">마이페이지</a>
+                        <a href="{{ url_for('auth.logout') }}">로그아웃</a>
+                    </div>
+                </div>
             {% else %}
                 <a href="{{ url_for('auth.login') }}">로그인</a>
                 <a href="{{ url_for('auth.signup') }}">회원가입</a>
