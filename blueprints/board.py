@@ -3,35 +3,12 @@ import os
 import uuid
 from functools import wraps
 
-import pymysql
-from flask import (Blueprint, abort, current_app, g, jsonify, redirect,
+from flask import (Blueprint, abort, current_app, jsonify, redirect,
                    render_template, request, session, url_for, flash)
 from werkzeug.utils import secure_filename
+from blueprints.db import get_db
 
 board_bp = Blueprint('board', __name__, url_prefix='/board')
-
-
-# ── DB 연결 헬퍼 ─────────────────────────────────────────────────────────────
-
-def get_db():
-    if 'db' not in g:
-        g.db = pymysql.connect(
-            host=os.environ.get('DB_HOST', 'gachon.arang.kr'),
-            port=int(os.environ.get('DB_PORT', 3306)),
-            user=os.environ.get('DB_USER', 'root'),
-            password=os.environ.get('DB_PASS', 'rkcjs123!'),
-            database=os.environ.get('DB_NAME', 'security_lab'),
-            cursorclass=pymysql.cursors.DictCursor,
-            charset='utf8mb4',
-        )
-    return g.db
-
-
-@board_bp.teardown_app_request
-def close_db(exception):
-    db = g.pop('db', None)
-    if db is not None:
-        db.close()
 
 
 # ── 로그인 필수 데코레이터 ────────────────────────────────────────────────────

@@ -1,35 +1,11 @@
-import os
 from functools import wraps
 
-import pymysql
-from flask import (Blueprint, g, redirect, render_template,
+from flask import (Blueprint, redirect, render_template,
                    request, session, url_for, flash)
 from werkzeug.security import check_password_hash, generate_password_hash
+from blueprints.db import get_db
 
 mypage_bp = Blueprint('mypage', __name__, url_prefix='/mypage')
-
-
-# ── DB 연결 헬퍼 ─────────────────────────────────────────────────────────────
-
-def get_db():
-    if 'db' not in g:
-        g.db = pymysql.connect(
-            host=os.environ.get('DB_HOST', 'gachon.arang.kr'),
-            port=int(os.environ.get('DB_PORT', 3306)),
-            user=os.environ.get('DB_USER', 'root'),
-            password=os.environ.get('DB_PASS', 'rkcjs123!'),
-            database=os.environ.get('DB_NAME', 'security_lab'),
-            cursorclass=pymysql.cursors.DictCursor,
-            charset='utf8mb4',
-        )
-    return g.db
-
-
-@mypage_bp.teardown_app_request
-def close_db(exception):
-    db = g.pop('db', None)
-    if db is not None:
-        db.close()
 
 
 # ── 로그인 필수 데코레이터 ────────────────────────────────────────────────────

@@ -1,33 +1,11 @@
-from flask import Blueprint, request, jsonify, session, g, render_template, abort, current_app
-import pymysql
+from flask import Blueprint, request, jsonify, session, render_template, abort, current_app
 import os
 import math
 import uuid
 from werkzeug.utils import secure_filename
+from blueprints.db import get_db
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
-
-
-# ── DB 연결 헬퍼 ─────────────────────────────────────────────────────────────
-
-def get_db():
-    if 'db' not in g:
-        g.db = pymysql.connect(
-            host=os.environ.get('DB_HOST', 'db'),
-            user=os.environ.get('DB_USER', 'root'),
-            password=os.environ.get('DB_PASS', 'rkcjs123!'),
-            database=os.environ.get('DB_NAME', 'security_lab'),
-            cursorclass=pymysql.cursors.DictCursor,
-            charset='utf8mb4',
-        )
-    return g.db
-
-
-@admin_bp.teardown_app_request
-def close_db(exception):
-    db = g.pop('db', None)
-    if db is not None:
-        db.close()
 
 
 # ── 관리자 인증 데코레이터 ────────────────────────────────────────────────────
