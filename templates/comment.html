@@ -1,66 +1,107 @@
-<div id="comment-list-section" style="margin-top: 40px; border-top: 2px solid #333; padding-top: 20px;">
-    <h4 style="margin-bottom: 20px;">💬 댓글 목록 ({{ comments|length if comments else 0 }}개)</h4>
-
+<div id="comment-list-area" style="margin-top: 40px;">
+    <h4 style="margin-bottom: 20px;">💬 댓글 목록</h4>
+    
     {% if comments %}
         {% for comment in comments %}
-        <div class="comment-item" style="border-bottom: 1px solid #eee; padding: 15px 0;">
-            <div style="display: flex; justify-content: space-between;">
-                <strong>{{ comment.author_name }}</strong> 
+        <div class="comment-item" style="padding: 15px; border-bottom: 1px solid #eee; 
+             margin-left: {{ '40px' if comment.parent_id else '0px' }}; 
+             background-color: {{ '#f8f9fa' if comment.parent_id else 'transparent' }};">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <strong>
+                    {% if comment.parent_id %} ↳ {% endif %} 
+                    {{ comment.author_name }}
+                </strong>
                 <small style="color: #999;">{{ comment.created_at }}</small>
             </div>
-            <div style="margin-top: 8px; color: #333;">
+            
+            <div style="margin-top: 10px; margin-bottom: 10px; color: #333;">
                 {{ comment.content }}
             </div>
+
+            {% if not comment.parent_id %}
+            <button onclick="toggleReplyForm({{ comment.comment_id }})" 
+                    style="background: none; border: none; color: #007bff; font-size: 13px; cursor: pointer; padding: 0;">
+                답글 달기
+            </button>
+            
+            <div id="reply-form-{{ comment.comment_id }}" style="display: none; margin-top: 10px; background: #e9ecef; padding: 15px; border-radius: 5px;">
+                <textarea id="reply-input-{{ comment.comment_id }}" 
+                          style="width: 100%; height: 60px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; resize: none;" 
+                          placeholder="답글 내용을 입력하세요."></textarea>
+                <div style="text-align: right; margin-top: 10px;">
+                    <button onclick="submitComment({{ comment.comment_id }})" 
+                            style="background-color: #6c757d; color: white; border: none; padding: 6px 15px; border-radius: 4px; cursor: pointer;">
+                        답글 등록
+                    </button>
+                </div>
+            </div>
+            {% endif %}
         </div>
         {% endfor %}
     {% else %}
-        <p style="color: #999; text-align: center; padding: 20px 0;">아직 댓글이 없습니다. 첫 번째 댓글을 남겨보세요!</p>
+        <p style="text-align: center; color: #999; padding: 20px 0;">첫 번째 댓글을 남겨보세요!</p>
     {% endif %}
 </div>
 
-<hr style="margin: 40px 0;">
+<hr style="margin: 40px 0; border: 1px solid #ddd;">
 
-<div id="comment-form-section" style="background-color: #f8f9fa; padding: 20px; border-radius: 10px;">
-    <h5 style="margin-bottom: 15px;">댓글 남기기</h5>
-    <textarea id="comment-input" class="form-control" 
-              style="width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; resize: none;" 
-              placeholder="내용을 입력해주세요."></textarea>
+<div id="main-comment-form" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
+    <h5 style="margin-bottom: 15px;">새 댓글 남기기</h5>
+    <textarea id="main-comment-input" 
+              style="width: 100%; height: 80px; padding: 12px; border: 1px solid #ccc; border-radius: 5px; resize: none;" 
+              placeholder="댓글 내용을 입력해주세요."></textarea>
     <div style="text-align: right; margin-top: 10px;">
-        <button onclick="submitComment()" 
-                style="background-color: #007bff; color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer;">
+        <button onclick="submitComment(null)" 
+                style="background-color: #007bff; color: white; border: none; padding: 8px 25px; border-radius: 5px; font-weight: bold; cursor: pointer;">
             등록
         </button>
     </div>
 </div>
 
 <script>
-function submitComment() {
-    const content = document.getElementById('comment-input').value;
-    // URL에서 board_id 추출 (예: /board/12 -> 12)
+// 답글 폼 보이기/숨기기
+function toggleReplyForm(commentId) {
+    const form = document.getElementById(`reply-form-${commentId}`);
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
+
+// 댓글(null) & 대댓글(부모ID) 통합 등록 함수
+function submitComment(parentId) {
+    // parentId가 있으면 대댓글 입력창, 없으면 하단 기본 입력창의 내용을 가져옴
+    const inputId = parentId ? `reply-input-${parentId}` : 'main-comment-input';
+    const content = document.getElementById(inputId).value;
     const boardId = window.location.pathname.split('/').pop();
 
-    if (!content.trim()) {
-        alert("댓글 내용을 입력해주세요.");
+    if (!content || !content.trim()) {
+        alert("내용을 입력해주세요.");
         return;
     }
 
+    // 서버에 POST 요청
     fetch(`/board/${boardId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: content })
+        body: JSON.stringify({ 
+            content: content,
+            parent_id: parentId // 핵심: 여기서 부모 번호를 서버에 알려줌
+        })
     })
-    .then(res => res.json())
+    .then(response => response.json())
     .then(data => {
-        if (data.message) {
-            alert("댓글이 등록되었습니다!");
-            location.reload(); // 등록 후 목록 갱신을 위해 새로고침
+        if (data.message === 'success') {
+            location.reload(); // 성공 시 새로고침하여 목록 갱신
         } else {
-            alert("오류: " + data.error);
+            alert("등록 실패: " + (data.error || "오류가 발생했습니다."));
         }
     })
-    .catch(err => {
-        console.error(err);
-        alert("서버 통신 오류가 발생했습니다.");
+    .catch(error => {
+        console.error('Error:', error);
+        alert("서버와 통신 중 문제가 발생했습니다.");
     });
 }
 </script>

@@ -142,7 +142,7 @@ def board_detail(board_id):
             FROM comment c
             JOIN users u ON c.user_idx = u.user_idx
             WHERE c.board_id = %s
-            ORDER BY c.created_at DESC
+            ORDER BY IFNULL(c.parent_id, c.comment_id) ASC, c.created_at ASC
         ''', (board_id,))
         comments = cursor.fetchall()
 

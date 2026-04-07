@@ -11,9 +11,11 @@ def add_comment(board_id):
     if not user_no:
         return jsonify({'error': '로그인이 필요한 서비스입니다.'}), 401
     
-    # 2. 데이터 유효성 검사
+    # 2. 데이터 처리 및 유효성 검사
     data = request.get_json()
     content = data.get('content', '').strip()
+    parent_id = data.get('parent_id') #  대댓글을 위한 부모 ID 받기 (일반 댓글이면 None이 들어옴)
+    
     if not content:
         return jsonify({'error': '댓글 내용을 입력해주세요.'}), 400
 
@@ -21,8 +23,9 @@ def add_comment(board_id):
     db = get_db()
     try:
         with db.cursor() as cursor:
-            sql = "INSERT INTO comment (board_id, user_idx, content) VALUES (%s, %s, %s)"
-            cursor.execute(sql, (board_id, user_no, content))
+            #  SQL 쿼리에 parent_id가 들어갈 자리(%s) 추가
+            sql = "INSERT INTO comment (board_id, user_idx, content, parent_id) VALUES (%s, %s, %s, %s)"
+            cursor.execute(sql, (board_id, user_no, content, parent_id))
         db.commit()
         return jsonify({'message': 'success'})
     except Exception as e:
