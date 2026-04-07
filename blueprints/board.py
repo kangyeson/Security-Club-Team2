@@ -2,6 +2,7 @@ import math
 import os
 import uuid
 from functools import wraps
+from datetime import timedelta
 
 from flask import (Blueprint, abort, current_app, jsonify, redirect,
                    render_template, request, session, url_for, flash)
@@ -148,7 +149,8 @@ def board_detail(board_id):
 
         for c in comments:
             if c.get('created_at'):
-                c['created_at'] = c['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+                kst_time = c['created_at'] + timedelta(hours=9)
+                c['created_at'] = kst_time.strftime('%Y-%m-%d %H:%M:%S')
          
 
     db.commit()
