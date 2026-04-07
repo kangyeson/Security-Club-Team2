@@ -1,0 +1,41 @@
+<div class="comment-container" style="margin-top: 50px; border-top: 1px solid #eee; padding-top: 20px;">
+    <h5 style="font-weight: bold; margin-bottom: 15px;">💬 댓글 작성</h5>
+    <div class="input-group">
+        <textarea id="comment-text" class="form-control" style="width: 100%; height: 80px; border-radius: 8px;" placeholder="따뜻한 댓글을 남겨주세요."></textarea>
+        <div style="text-align: right; margin-top: 10px;">
+            <button onclick="postComment()" class="btn btn-primary">댓글 등록</button>
+        </div>
+    </div>
+</div>
+
+<script>
+async function postComment() {
+    const content = document.getElementById('comment-text').value;
+    const boardId = window.location.pathname.split('/').pop();
+
+    if (!content.trim()) {
+        alert("댓글 내용을 입력해 주세요.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`/board/${boardId}/comments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: content })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert("댓글이 성공적으로 등록되었습니다.");
+            location.reload();
+        } else {
+            alert(result.error || "등록 중 오류가 발생했습니다.");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("서버와 통신 중 에러가 발생했습니다.");
+    }
+}
+</script>
