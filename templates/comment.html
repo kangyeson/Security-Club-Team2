@@ -1,41 +1,66 @@
-<div class="comment-container" style="margin-top: 50px; border-top: 1px solid #eee; padding-top: 20px;">
-    <h5 style="font-weight: bold; margin-bottom: 15px;">💬 댓글 작성</h5>
-    <div class="input-group">
-        <textarea id="comment-text" class="form-control" style="width: 100%; height: 80px; border-radius: 8px;" placeholder="따뜻한 댓글을 남겨주세요."></textarea>
-        <div style="text-align: right; margin-top: 10px;">
-            <button onclick="postComment()" class="btn btn-primary">댓글 등록</button>
+<div id="comment-list-section" style="margin-top: 40px; border-top: 2px solid #333; padding-top: 20px;">
+    <h4 style="margin-bottom: 20px;">💬 댓글 목록 ({{ comments|length if comments else 0 }}개)</h4>
+
+    {% if comments %}
+        {% for comment in comments %}
+        <div class="comment-item" style="border-bottom: 1px solid #eee; padding: 15px 0;">
+            <div style="display: flex; justify-content: space-between;">
+                <strong>{{ comment.author_name }}</strong> 
+                <small style="color: #999;">{{ comment.created_at }}</small>
+            </div>
+            <div style="margin-top: 8px; color: #333;">
+                {{ comment.content }}
+            </div>
         </div>
+        {% endfor %}
+    {% else %}
+        <p style="color: #999; text-align: center; padding: 20px 0;">아직 댓글이 없습니다. 첫 번째 댓글을 남겨보세요!</p>
+    {% endif %}
+</div>
+
+<hr style="margin: 40px 0;">
+
+<div id="comment-form-section" style="background-color: #f8f9fa; padding: 20px; border-radius: 10px;">
+    <h5 style="margin-bottom: 15px;">댓글 남기기</h5>
+    <textarea id="comment-input" class="form-control" 
+              style="width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; resize: none;" 
+              placeholder="내용을 입력해주세요."></textarea>
+    <div style="text-align: right; margin-top: 10px;">
+        <button onclick="submitComment()" 
+                style="background-color: #007bff; color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer;">
+            등록
+        </button>
     </div>
 </div>
 
 <script>
-async function postComment() {
-    const content = document.getElementById('comment-text').value;
+function submitComment() {
+    const content = document.getElementById('comment-input').value;
+    // URL에서 board_id 추출 (예: /board/12 -> 12)
     const boardId = window.location.pathname.split('/').pop();
 
     if (!content.trim()) {
-        alert("댓글 내용을 입력해 주세요.");
+        alert("댓글 내용을 입력해주세요.");
         return;
     }
 
-    try {
-        const response = await fetch(`/board/${boardId}/comments`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content: content })
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-            alert("댓글이 성공적으로 등록되었습니다.");
-            location.reload();
+    fetch(`/board/${boardId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: content })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.message) {
+            alert("댓글이 등록되었습니다!");
+            location.reload(); // 등록 후 목록 갱신을 위해 새로고침
         } else {
-            alert(result.error || "등록 중 오류가 발생했습니다.");
+            alert("오류: " + data.error);
         }
-    } catch (err) {
+    })
+    .catch(err => {
         console.error(err);
-        alert("서버와 통신 중 에러가 발생했습니다.");
-    }
+        alert("서버 통신 오류가 발생했습니다.");
+    });
 }
 </script>

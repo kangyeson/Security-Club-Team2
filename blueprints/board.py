@@ -136,6 +136,21 @@ def board_detail(board_id):
             )
             user_liked = cursor.fetchone() is not None
 
+        # ──  댓글 조회 로직 추가 ──────────────────────────
+        cursor.execute('''
+            SELECT c.*, u.name AS author_name
+            FROM comment c
+            JOIN users u ON c.user_idx = u.user_idx
+            WHERE c.board_id = %s
+            ORDER BY c.created_at DESC
+        ''', (board_id,))
+        comments = cursor.fetchall()
+
+        for c in comments:
+            if c.get('created_at'):
+                c['created_at'] = c['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+         
+
     db.commit()
 
     if post is None:
@@ -152,6 +167,7 @@ def board_detail(board_id):
         current_role=session.get('user_role'),
         like_count=like_count,
         user_liked=user_liked,
+        comments=comments
     )
 
 
