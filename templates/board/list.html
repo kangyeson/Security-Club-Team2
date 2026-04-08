@@ -64,7 +64,7 @@
                 {% if post.type == 'NOTICE' %}
                     <span class="pin-icon">📌</span>
                 {% else %}
-                    {{ total - (loop.index0 - notice_count) - (page - 1) * 15 }}
+                    {{ loop.index - notice_count + (page - 1) * 15 }}
                 {% endif %}
             </td>
             <td class="col-title">
