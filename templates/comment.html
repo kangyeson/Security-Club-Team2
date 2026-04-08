@@ -9,10 +9,18 @@
             
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <strong>
-                    {% if comment.parent_id %} ↳ {% endif %} 
+                    {% if comment.parent_id %} ↳ {% endif %}
                     {{ comment.author_name }}
                 </strong>
-                <small style="color: #999;">{{ comment.created_at }}</small>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <small style="color: #999;">{{ comment.created_at }}</small>
+                    {% if is_admin %}
+                    <button onclick="deleteComment({{ comment.comment_id }})"
+                            style="background: none; border: none; color: #e53e3e; font-size: 12px; cursor: pointer; padding: 0;">
+                        🗑 삭제
+                    </button>
+                    {% endif %}
+                </div>
             </div>
             
             <div style="margin-top: 10px; margin-bottom: 10px; color: #333;">
@@ -60,6 +68,22 @@
 </div>
 
 <script>
+// 댓글 삭제 (관리자 전용)
+function deleteComment(commentId) {
+    if (!confirm('이 댓글을 삭제하시겠습니까?\n자식 대댓글도 함께 삭제됩니다.')) return;
+
+    fetch(`/admin/comments/${commentId}`, { method: 'DELETE' })
+        .then(res => res.json().then(data => ({ status: res.status, data })))
+        .then(({ status, data }) => {
+            if (status === 200) {
+                location.reload();
+            } else {
+                alert('삭제 실패: ' + (data.error || '오류가 발생했습니다.'));
+            }
+        })
+        .catch(() => alert('서버와 통신 중 오류가 발생했습니다.'));
+}
+
 // 답글 폼 보이기/숨기기
 function toggleReplyForm(commentId) {
     const form = document.getElementById(`reply-form-${commentId}`);

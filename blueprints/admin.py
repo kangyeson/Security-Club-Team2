@@ -244,6 +244,38 @@ def delete_board(board_id):
         return jsonify({'error': f'삭제 중 오류가 발생했습니다: {str(e)}'}), 500
 
 
+# ── API: 댓글 삭제 ────────────────────────────────────────────────────────────
+#
+# DELETE /admin/comments/<comment_id>
+#   - 관리자 전용
+#   - 자식 대댓글이 있으면 함께 삭제 (부모 먼저 끊기 위해 parent_id NULL 처리 후 삭제)
+
+@admin_bp.route('/comments/<int:comment_id>', methods=['DELETE'])
+@admin_required
+def delete_comment(comment_id):
+    db = get_db()
+    try:
+        with db.cursor() as cursor:
+            # 존재 여부 확인
+            cursor.execute('SELECT comment_id FROM comment WHERE comment_id = %s', (comment_id,))
+            if cursor.fetchone() is None:
+                return jsonify({'error': '존재하지 않는 댓글입니다.'}), 404
+
+            # 1. 자식 대댓글의 parent_id NULL 처리 후 삭제
+            cursor.execute('UPDATE comment SET parent_id = NULL WHERE parent_id = %s', (comment_id,))
+            cursor.execute('DELETE FROM comment WHERE parent_id = %s', (comment_id,))
+
+            # 2. 본인 댓글 삭제
+            cursor.execute('DELETE FROM comment WHERE comment_id = %s', (comment_id,))
+
+        db.commit()
+        return jsonify({'message': '댓글이 삭제되었습니다.'}), 200
+
+    except Exception as e:
+        db.rollback()
+        return jsonify({'error': f'삭제 중 오류가 발생했습니다: {str(e)}'}), 500
+
+
 # ── 페이지: 공지 작성 ─────────────────────────────────────────────────────────
 #
 # GET /admin/notices/new
