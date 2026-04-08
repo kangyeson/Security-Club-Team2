@@ -63,7 +63,7 @@ def mypage():
         )
         liked_posts = cursor.fetchall()
 
-    for post in my_posts + liked_posts:
+    for post in list(my_posts) + list(liked_posts):
         if post.get('created_at'):
             post['created_at'] = post['created_at'].strftime('%Y-%m-%d')
 
