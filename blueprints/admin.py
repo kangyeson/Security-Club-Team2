@@ -95,8 +95,9 @@ def get_users():
         )
         users = cursor.fetchall()
 
-    # datetime → 문자열 직렬화
+    # datetime → 문자열 직렬화, password 해시 제거
     for user in users:
+        user.pop('password', None)
         for key in ('created_at', 'updated_at'):
             if user[key] is not None:
                 user[key] = user[key].strftime('%Y-%m-%d %H:%M:%S')
