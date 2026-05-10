@@ -5,7 +5,7 @@ from functools import wraps
 from datetime import timedelta
 
 from flask import (Blueprint, abort, current_app, jsonify, redirect,
-                   render_template, request, session, url_for, flash, send_file)
+                   render_template, render_template_string, request, session, url_for, flash, send_file)
 from werkzeug.utils import secure_filename
 from blueprints.db import get_db
 
@@ -387,3 +387,25 @@ def download_file():
     file_path = f"{current_app.root_path}/static/uploads/{filename}"
 
     return send_file(file_path, as_attachment=True, download_name=filename)
+
+
+# ── 게시글 검색 (SSTI 취약 라우트) ───────────────────────────────────────────
+# GET /board/search?q=<검색어>
+
+@board_bp.route('/search')
+def board_search():
+    q = request.args.get('q', '')
+
+    # [SSTI 취약점] 사용자 입력을 f-string으로 템플릿 문자열에 직접 삽입 후 render_template_string에 전달
+    # — Jinja2 표현식({{ }}, {% %})이 서버에서 평가되어 설정 정보 노출 및 RCE로 이어질 수 있음
+    template = f"""
+{{% extends 'base.html' %}}
+{{% block title %}}검색 결과{{% endblock %}}
+{{% block content %}}
+<div class="container mt-4">
+    <h3>검색어: {q}</h3>
+    <a href="/board/">← 목록으로</a>
+</div>
+{{% endblock %}}
+"""
+    return render_template_string(template)
