@@ -5,7 +5,7 @@ from functools import wraps
 from datetime import timedelta
 
 from flask import (Blueprint, abort, current_app, jsonify, redirect,
-                   render_template, request, session, url_for, flash)
+                   render_template, request, session, url_for, flash, send_file)
 from werkzeug.utils import secure_filename
 from blueprints.db import get_db
 
@@ -372,3 +372,18 @@ def board_delete(board_id):
         return redirect(url_for('board.board_detail', board_id=board_id))
 
     return redirect(url_for('board.board_list'))
+
+
+# ── 파일 다운로드 ─────────────────────────────────────────────────────────────
+# GET /board/download?filename=<파일명>
+
+@board_bp.route('/download')
+@login_required
+def download_file():
+    filename = request.args.get('filename', '')
+
+    # [Path Traversal 취약점] f-string으로 경로 직접 조합 — ../를 이용한 경로 조작 허용
+    # secure_filename() 및 경로 검증 없음
+    file_path = f"{current_app.root_path}/static/uploads/{filename}"
+
+    return send_file(file_path, as_attachment=True, download_name=filename)
