@@ -8,10 +8,35 @@ from blueprints.db import get_db
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 
-# ── 관리자 인증 데코레이터 ────────────────────────────────────────────────────
+# ── 인증 데코레이터 ──────────────────────────────────────────────────────────
+# ⚠️ 실습용 의도적 Broken Access Control 취약점 (OWASP A01:2021)
+#
+# 원래는 admin_required 로 ADMIN 역할을 검증해야 하지만,
+# 권한 체크를 제거하고 로그인 여부만 검사하는 login_required 로 교체.
+# → USER 권한으로 로그인한 일반 사용자도 /admin/* 의 모든 기능에 접근 가능.
+#
+# PoC 시나리오:
+#   1) USER 계정으로 로그인 (예: user01/user01)
+#   2) GET /admin/users?per_page=100  → 전체 회원 목록 탈취
+#   3) DELETE /admin/users/1          → 관리자 계정도 삭제 가능
+#   4) POST /admin/notices            → 공지 임의 작성
+#
+# 조치 방안: admin_required 데코레이터 복구 + Blueprint.before_request 로 이중화
 
 from functools import wraps
 
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('user_id'):
+            return jsonify({'error': '로그인이 필요합니다.'}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+
+# ⚠️ 아래 admin_required 는 정의만 남겨두었으나 라우트에서 사용하지 않음.
+# 실습 후 안전한 코드로 되돌릴 때 다시 부착해야 한다.
 def admin_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -26,7 +51,7 @@ def admin_required(f):
 # GET /admin/users/list
 
 @admin_bp.route('/users/list', methods=['GET'])
-@admin_required
+@login_required  # ⚠️ 의도적 취약점: 원래는 @admin_required
 def user_list_page():
     return render_template('admin/user_list.html')
 
@@ -47,7 +72,7 @@ def user_list_page():
 #   }
 
 @admin_bp.route('/users', methods=['GET'])
-@admin_required
+@login_required  # ⚠️ 의도적 취약점: 원래는 @admin_required
 def get_users():
     # ── 파라미터 파싱 ──────────────────────────────────────────────────────
     try:
@@ -63,22 +88,19 @@ def get_users():
     name_keyword = request.args.get('name', '').strip()
 
     # ── 쿼리 구성 ──────────────────────────────────────────────────────────
+    # ⚠️ 실습용 의도적 SQL Injection 취약점 (OWASP A03:2021)
+    # name 검색어를 그대로 LIKE 패턴에 삽입 → UNION/Boolean-based SQLi 가능
+    # PoC: ?name=%' UNION SELECT 1,user_id,password,name,role,email,NOW(),NOW() FROM users --
     where_clause = ''
-    params = []
-
     if name_keyword:
-        where_clause = 'WHERE name LIKE %s'
-        params.append(f'%{name_keyword}%')
+        where_clause = f"WHERE name LIKE '%{name_keyword}%'"
 
     offset = (page - 1) * per_page
 
     db = get_db()
     with db.cursor() as cursor:
         # 전체 건수
-        cursor.execute(
-            f'SELECT COUNT(*) AS total FROM users {where_clause}',
-            params,
-        )
+        cursor.execute(f'SELECT COUNT(*) AS total FROM users {where_clause}')
         total = cursor.fetchone()['total']
 
         # 페이지 데이터
@@ -91,7 +113,7 @@ def get_users():
             ORDER BY name ASC
             LIMIT %s OFFSET %s
             ''',
-            params + [per_page, offset],
+            [per_page, offset],
         )
         users = cursor.fetchall()
 
@@ -120,7 +142,7 @@ def get_users():
 # GET /admin/users/<user_idx>/profile
 
 @admin_bp.route('/users/<int:user_idx>/profile', methods=['GET'])
-@admin_required
+@login_required  # ⚠️ [IDOR/BAC] @admin_required 제거 — 로그인한 모든 사용자가 타 사용자 프로필 조회 가능
 def user_profile_page(user_idx):
     db = get_db()
     with db.cursor() as cursor:
@@ -157,7 +179,7 @@ def user_profile_page(user_idx):
 #     6. 유저 삭제
 
 @admin_bp.route('/users/<int:user_idx>', methods=['DELETE'])
-@admin_required
+@login_required  # ⚠️ 의도적 취약점: 원래는 @admin_required
 def delete_user(user_idx):
     db = get_db()
     try:
@@ -213,7 +235,7 @@ def delete_user(user_idx):
 #     4. 파일 삭제
 
 @admin_bp.route('/board/<int:board_id>', methods=['DELETE'])
-@admin_required
+@login_required  # ⚠️ 의도적 취약점: 원래는 @admin_required
 def delete_board(board_id):
     db = get_db()
     try:
@@ -252,7 +274,7 @@ def delete_board(board_id):
 #   - 자식 대댓글이 있으면 함께 삭제 (부모 먼저 끊기 위해 parent_id NULL 처리 후 삭제)
 
 @admin_bp.route('/comments/<int:comment_id>', methods=['DELETE'])
-@admin_required
+@login_required  # ⚠️ 의도적 취약점: 원래는 @admin_required
 def delete_comment(comment_id):
     db = get_db()
     try:
@@ -282,7 +304,7 @@ def delete_comment(comment_id):
 # GET /admin/notices/new
 
 @admin_bp.route('/notices/new', methods=['GET'])
-@admin_required
+@login_required  # ⚠️ 의도적 취약점: 원래는 @admin_required
 def notice_write_page():
     return render_template('admin/notice_write.html')
 
@@ -297,7 +319,7 @@ def notice_write_page():
 #   - 성공 → 201 { board_id, message }
 
 @admin_bp.route('/notices', methods=['POST'])
-@admin_required
+@login_required  # ⚠️ 의도적 취약점: 원래는 @admin_required
 def create_notice():
     title   = request.form.get('title', '').strip()
     content = request.form.get('content', '').strip()
@@ -357,7 +379,7 @@ def create_notice():
 #   - 성공 → 200 { message }
 
 @admin_bp.route('/notices/<int:board_id>', methods=['PATCH'])
-@admin_required
+@login_required  # ⚠️ 의도적 취약점: 원래는 @admin_required
 def update_notice(board_id):
     data = request.get_json(silent=True) or {}
     title = data.get('title', '').strip()
@@ -399,7 +421,7 @@ def update_notice(board_id):
 # GET /admin/users/<user_idx>
 
 @admin_bp.route('/users/<int:user_idx>', methods=['GET'])
-@admin_required
+@login_required  # ⚠️ 의도적 취약점: 원래는 @admin_required
 def get_user(user_idx):
     db = get_db()
     with db.cursor() as cursor:

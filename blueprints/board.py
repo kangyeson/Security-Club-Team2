@@ -5,7 +5,7 @@ from functools import wraps
 from datetime import timedelta
 
 from flask import (Blueprint, abort, current_app, jsonify, redirect,
-                   render_template, request, session, url_for, flash)
+                   render_template, render_template_string, request, session, url_for, flash, send_file)
 from werkzeug.utils import secure_filename
 from blueprints.db import get_db
 
@@ -28,12 +28,13 @@ def login_required(f):
 
 def save_uploaded_file(file_obj):
     """업로드된 파일을 저장하고 (original_name, stored_path) 를 반환."""
-    original_name = secure_filename(file_obj.filename)
-    unique_name = f'{uuid.uuid4().hex}_{original_name}'
+    # [파일 업로드 취약점] secure_filename() 및 UUID 프리픽스 제거
+    # — 원본 파일명 그대로 저장 → 경로 조작(Path Traversal) 및 악성 파일 업로드 허용
+    original_name = file_obj.filename
     upload_dir = os.path.join(current_app.root_path, 'static', 'uploads')
     os.makedirs(upload_dir, exist_ok=True)
-    file_obj.save(os.path.join(upload_dir, unique_name))
-    return original_name, f'/static/uploads/{unique_name}'
+    file_obj.save(os.path.join(upload_dir, original_name))
+    return original_name, f'/static/uploads/{original_name}'
 
 
 # ── 게시글 목록 ───────────────────────────────────────────────────────────────
@@ -50,18 +51,16 @@ def board_list():
     per_page = 15
     offset = (page - 1) * per_page
 
+    # ⚠️ 실습용 의도적 SQL Injection 취약점 (OWASP A03:2021)
+    # 검색어를 그대로 LIKE 패턴에 문자열 삽입 → UNION/Boolean-based SQLi 가능
+    # PoC: ?title=%' UNION SELECT user_idx,user_id,password,role,email,name,created_at FROM users --
     where_clause = ''
-    params = []
     if title_keyword:
-        where_clause = 'WHERE b.title LIKE %s'
-        params.append(f'%{title_keyword}%')
+        where_clause = f"WHERE b.title LIKE '%{title_keyword}%'"
 
     db = get_db()
     with db.cursor() as cursor:
-        cursor.execute(
-            f'SELECT COUNT(*) AS total FROM board b {where_clause}',
-            params,
-        )
+        cursor.execute(f'SELECT COUNT(*) AS total FROM board b {where_clause}')
         total = cursor.fetchone()['total']
 
         cursor.execute(
@@ -77,7 +76,7 @@ def board_list():
                 b.created_at DESC
             LIMIT %s OFFSET %s
             ''',
-            params + [per_page, offset],
+            [per_page, offset],
         )
         posts = cursor.fetchall()
 
@@ -287,8 +286,9 @@ def board_edit(board_id):
     if post['type'] == 'NOTICE' and session.get('user_role') != 'ADMIN':
         abort(403)
 
-    if post['user_idx'] != session.get('user_no') and session.get('user_role') != 'ADMIN':
-        abort(403)
+    # [IDOR] 소유권 검증 제거 — 로그인한 모든 사용자가 타인의 게시글 수정 가능
+    # if post['user_idx'] != session.get('user_no') and session.get('user_role') != 'ADMIN':
+    #     abort(403)
 
     if request.method == 'GET':
         return render_template('board/write.html', mode='edit', post=post)
@@ -350,8 +350,9 @@ def board_delete(board_id):
     if post is None:
         abort(404)
 
-    if post['user_idx'] != session.get('user_no') and session.get('user_role') != 'ADMIN':
-        abort(403)
+    # [IDOR] 소유권 검증 제거 — 로그인한 모든 사용자가 타인의 게시글 삭제 가능
+    # if post['user_idx'] != session.get('user_no') and session.get('user_role') != 'ADMIN':
+    #     abort(403)
 
     try:
         with db.cursor() as cursor:
@@ -369,3 +370,40 @@ def board_delete(board_id):
         return redirect(url_for('board.board_detail', board_id=board_id))
 
     return redirect(url_for('board.board_list'))
+
+
+# ── 파일 다운로드 ─────────────────────────────────────────────────────────────
+# GET /board/download?filename=<파일명>
+
+@board_bp.route('/download')
+@login_required
+def download_file():
+    filename = request.args.get('filename', '')
+
+    # [Path Traversal 취약점] f-string으로 경로 직접 조합 — ../를 이용한 경로 조작 허용
+    # secure_filename() 및 경로 검증 없음
+    file_path = f"{current_app.root_path}/static/uploads/{filename}"
+
+    return send_file(file_path, as_attachment=True, download_name=filename)
+
+
+# ── 게시글 검색 (SSTI 취약 라우트) ───────────────────────────────────────────
+# GET /board/search?q=<검색어>
+
+@board_bp.route('/search')
+def board_search():
+    q = request.args.get('q', '')
+
+    # [SSTI 취약점] 사용자 입력을 f-string으로 템플릿 문자열에 직접 삽입 후 render_template_string에 전달
+    # — Jinja2 표현식({{ }}, {% %})이 서버에서 평가되어 설정 정보 노출 및 RCE로 이어질 수 있음
+    template = f"""
+{{% extends 'base.html' %}}
+{{% block title %}}검색 결과{{% endblock %}}
+{{% block content %}}
+<div class="container mt-4">
+    <h3>검색어: {q}</h3>
+    <a href="/board/">← 목록으로</a>
+</div>
+{{% endblock %}}
+"""
+    return render_template_string(template)

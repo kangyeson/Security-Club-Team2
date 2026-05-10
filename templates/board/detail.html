@@ -54,7 +54,9 @@
     {% if post.file_name and post.file_path %}
     <div class="attachment-box">
         <span class="attachment-label">📎 첨부파일</span>
-        <a href="{{ post.file_path }}" class="attachment-link" download="{{ post.file_name }}">
+        <!-- [Path Traversal 취약점] filename 파라미터를 그대로 서버 경로에 조합 -->
+        <a href="/board/download?filename={{ post.file_path | replace('/static/uploads/', '') }}"
+           class="attachment-link">
             {{ post.file_name }}
         </a>
     </div>

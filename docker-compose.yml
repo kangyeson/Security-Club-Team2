@@ -7,6 +7,9 @@ services: # 실행할 서비스(컨테이너)들의 목록
     environment: # MySQL 설정에 필요한 환경 변수(ID/PW 등)를 주입
       MYSQL_ROOT_PASSWORD: rkcjs123! # DB의 최고 관리자(root) 비밀번호입니다. (보안상 추후 변경 필요)
       MYSQL_DATABASE: security_lab # 컨테이너가 시작될 때 자동으로 생성될 DB 이름
+    # [MySQL FILE 권한 남용] secure-file-priv 제한 해제
+    # — LOAD_FILE()로 서버 임의 파일 읽기, INTO OUTFILE로 임의 경로에 파일 쓰기 허용
+    command: --secure-file-priv=""
     ports:
       - "3306:3306" # [호스트 포트]:[컨테이너 포트] -> 서버(gachon...)의 3306번 문과 도커 안의 3306번 문을 연결
     volumes: # 데이터 보존을 위한 설정
