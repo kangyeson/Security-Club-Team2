@@ -63,20 +63,19 @@ CREATE TABLE IF NOT EXISTS comment (
 );
 
 -- 초기 계정 데이터
--- admin / user01~12: 테스트용 평문 비밀번호
--- guest: 팀원 구현 계정 (werkzeug scrypt 해시)
+-- ⚠️ 실습용 의도적 취약점: 평문 비밀번호 저장 (SQL Injection 시연을 위해)
 INSERT INTO users (user_id, password, name, role, email) VALUES
-    ('admin',  'scrypt:32768:8:1$JK9wQKyNcO1CdC34$f06950e284be512e2bc84ed92d98765119bc63196721058bfb5b43428d26eb5028e0c5915753b458c35b16122f39e035b7b8452ca468c14a84fd1b9abf141bac', '관리자', 'ADMIN', 'admin@security.lab'),
-    ('user01', 'scrypt:32768:8:1$dXmibb1NKYdE77L4$4166107512b42442123caa3e68e56bb91122521d06ae8d56c935a75efd072feaf30d527a2b909db7bb49dfcf300da8c9ae6981de6a1c7d8cd5344b1a543af21a', '홍길동', 'USER',  'user01@security.lab'),
-    ('user02', 'scrypt:32768:8:1$dXmibb1NKYdE77L4$4166107512b42442123caa3e68e56bb91122521d06ae8d56c935a75efd072feaf30d527a2b909db7bb49dfcf300da8c9ae6981de6a1c7d8cd5344b1a543af21a', '김철수', 'USER',  'user02@security.lab'),
-    ('user03', 'scrypt:32768:8:1$dXmibb1NKYdE77L4$4166107512b42442123caa3e68e56bb91122521d06ae8d56c935a75efd072feaf30d527a2b909db7bb49dfcf300da8c9ae6981de6a1c7d8cd5344b1a543af21a', '이영희', 'USER',  'user03@security.lab'),
-    ('user04', 'scrypt:32768:8:1$dXmibb1NKYdE77L4$4166107512b42442123caa3e68e56bb91122521d06ae8d56c935a75efd072feaf30d527a2b909db7bb49dfcf300da8c9ae6981de6a1c7d8cd5344b1a543af21a', '박민준', 'USER',  'user04@security.lab'),
-    ('user05', 'scrypt:32768:8:1$dXmibb1NKYdE77L4$4166107512b42442123caa3e68e56bb91122521d06ae8d56c935a75efd072feaf30d527a2b909db7bb49dfcf300da8c9ae6981de6a1c7d8cd5344b1a543af21a', '최수진', 'USER',  'user05@security.lab'),
-    ('user06', 'scrypt:32768:8:1$dXmibb1NKYdE77L4$4166107512b42442123caa3e68e56bb91122521d06ae8d56c935a75efd072feaf30d527a2b909db7bb49dfcf300da8c9ae6981de6a1c7d8cd5344b1a543af21a', '정도윤', 'USER',  'user06@security.lab'),
-    ('user07', 'scrypt:32768:8:1$dXmibb1NKYdE77L4$4166107512b42442123caa3e68e56bb91122521d06ae8d56c935a75efd072feaf30d527a2b909db7bb49dfcf300da8c9ae6981de6a1c7d8cd5344b1a543af21a', '강지우', 'USER',  'user07@security.lab'),
-    ('user08', 'scrypt:32768:8:1$dXmibb1NKYdE77L4$4166107512b42442123caa3e68e56bb91122521d06ae8d56c935a75efd072feaf30d527a2b909db7bb49dfcf300da8c9ae6981de6a1c7d8cd5344b1a543af21a', '윤서연', 'USER',  'user08@security.lab'),
-    ('user09', 'scrypt:32768:8:1$dXmibb1NKYdE77L4$4166107512b42442123caa3e68e56bb91122521d06ae8d56c935a75efd072feaf30d527a2b909db7bb49dfcf300da8c9ae6981de6a1c7d8cd5344b1a543af21a', '임현우', 'USER',  'user09@security.lab'),
-    ('user10', 'scrypt:32768:8:1$dXmibb1NKYdE77L4$4166107512b42442123caa3e68e56bb91122521d06ae8d56c935a75efd072feaf30d527a2b909db7bb49dfcf300da8c9ae6981de6a1c7d8cd5344b1a543af21a', '한소희', 'USER',  'user10@security.lab'),
-    ('user11', 'scrypt:32768:8:1$dXmibb1NKYdE77L4$4166107512b42442123caa3e68e56bb91122521d06ae8d56c935a75efd072feaf30d527a2b909db7bb49dfcf300da8c9ae6981de6a1c7d8cd5344b1a543af21a', '오태양', 'USER',  'user11@security.lab'),
-    ('user12', 'scrypt:32768:8:1$dXmibb1NKYdE77L4$4166107512b42442123caa3e68e56bb91122521d06ae8d56c935a75efd072feaf30d527a2b909db7bb49dfcf300da8c9ae6981de6a1c7d8cd5344b1a543af21a', '신예원', 'USER',  'user12@security.lab'),
-    ('guest',  'scrypt:32768:8:1$EFk8kM1aFW6RFjZ4$946627173bd038456e98e5edd4131ecc17600ec44bbc62ec82a435875c93d18253b7fbd42a7a8445453418588d5cfa19763fc829d670b35865866516282f319d', '게스트', 'USER', 'guest@security-lab.kr');
+    ('admin',  'admin1234', '관리자', 'ADMIN', 'admin@security.lab'),
+    ('user01', 'user01',    '홍길동', 'USER',  'user01@security.lab'),
+    ('user02', 'user02',    '김철수', 'USER',  'user02@security.lab'),
+    ('user03', 'user03',    '이영희', 'USER',  'user03@security.lab'),
+    ('user04', 'user04',    '박민준', 'USER',  'user04@security.lab'),
+    ('user05', 'user05',    '최수진', 'USER',  'user05@security.lab'),
+    ('user06', 'user06',    '정도윤', 'USER',  'user06@security.lab'),
+    ('user07', 'user07',    '강지우', 'USER',  'user07@security.lab'),
+    ('user08', 'user08',    '윤서연', 'USER',  'user08@security.lab'),
+    ('user09', 'user09',    '임현우', 'USER',  'user09@security.lab'),
+    ('user10', 'user10',    '한소희', 'USER',  'user10@security.lab'),
+    ('user11', 'user11',    '오태양', 'USER',  'user11@security.lab'),
+    ('user12', 'user12',    '신예원', 'USER',  'user12@security.lab'),
+    ('guest',  'guest',     '게스트', 'USER',  'guest@security-lab.kr');
