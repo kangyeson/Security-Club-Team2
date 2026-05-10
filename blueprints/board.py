@@ -287,8 +287,9 @@ def board_edit(board_id):
     if post['type'] == 'NOTICE' and session.get('user_role') != 'ADMIN':
         abort(403)
 
-    if post['user_idx'] != session.get('user_no') and session.get('user_role') != 'ADMIN':
-        abort(403)
+    # [IDOR] 소유권 검증 제거 — 로그인한 모든 사용자가 타인의 게시글 수정 가능
+    # if post['user_idx'] != session.get('user_no') and session.get('user_role') != 'ADMIN':
+    #     abort(403)
 
     if request.method == 'GET':
         return render_template('board/write.html', mode='edit', post=post)
@@ -350,8 +351,9 @@ def board_delete(board_id):
     if post is None:
         abort(404)
 
-    if post['user_idx'] != session.get('user_no') and session.get('user_role') != 'ADMIN':
-        abort(403)
+    # [IDOR] 소유권 검증 제거 — 로그인한 모든 사용자가 타인의 게시글 삭제 가능
+    # if post['user_idx'] != session.get('user_no') and session.get('user_role') != 'ADMIN':
+    #     abort(403)
 
     try:
         with db.cursor() as cursor:

@@ -120,7 +120,7 @@ def get_users():
 # GET /admin/users/<user_idx>/profile
 
 @admin_bp.route('/users/<int:user_idx>/profile', methods=['GET'])
-@admin_required
+# [IDOR] @admin_required 제거 — 로그인한 모든 사용자가 타 사용자 프로필 조회 가능
 def user_profile_page(user_idx):
     db = get_db()
     with db.cursor() as cursor:
