@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session, flash
 from models.user import UserModel
-from werkzeug.security import check_password_hash
+from blueprints.db import get_db
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -60,9 +60,19 @@ def login():
         flash("아이디와 비밀번호를 모두 입력해주세요.")
         return redirect(url_for('auth.login'))
 
-    user = UserModel.get_user_by_id(user_id)
+    # ⚠️ 실습용 의도적 SQL Injection 취약점 (OWASP A03:2021)
+    # 사용자 입력을 그대로 쿼리 문자열에 삽입 → 인증 우회 가능
+    # PoC: id="admin' OR '1'='1' --", pw=(아무거나) → 첫 사용자(admin)로 로그인
+    sql = (
+        "SELECT * FROM users "
+        f"WHERE user_id = '{user_id}' AND password = '{password}'"
+    )
+    db = get_db()
+    with db.cursor() as cursor:
+        cursor.execute(sql)
+        user = cursor.fetchone()
 
-    if user and check_password_hash(user['password'], password):
+    if user:
         session.clear()
         session['user_no'] = user['user_idx']
         session['user_id'] = user['user_id']

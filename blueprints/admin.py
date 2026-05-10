@@ -63,22 +63,19 @@ def get_users():
     name_keyword = request.args.get('name', '').strip()
 
     # ── 쿼리 구성 ──────────────────────────────────────────────────────────
+    # ⚠️ 실습용 의도적 SQL Injection 취약점 (OWASP A03:2021)
+    # name 검색어를 그대로 LIKE 패턴에 삽입 → UNION/Boolean-based SQLi 가능
+    # PoC: ?name=%' UNION SELECT 1,user_id,password,name,role,email,NOW(),NOW() FROM users --
     where_clause = ''
-    params = []
-
     if name_keyword:
-        where_clause = 'WHERE name LIKE %s'
-        params.append(f'%{name_keyword}%')
+        where_clause = f"WHERE name LIKE '%{name_keyword}%'"
 
     offset = (page - 1) * per_page
 
     db = get_db()
     with db.cursor() as cursor:
         # 전체 건수
-        cursor.execute(
-            f'SELECT COUNT(*) AS total FROM users {where_clause}',
-            params,
-        )
+        cursor.execute(f'SELECT COUNT(*) AS total FROM users {where_clause}')
         total = cursor.fetchone()['total']
 
         # 페이지 데이터
@@ -91,7 +88,7 @@ def get_users():
             ORDER BY name ASC
             LIMIT %s OFFSET %s
             ''',
-            params + [per_page, offset],
+            [per_page, offset],
         )
         users = cursor.fetchall()
 

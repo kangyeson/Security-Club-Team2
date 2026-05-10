@@ -51,18 +51,16 @@ def board_list():
     per_page = 15
     offset = (page - 1) * per_page
 
+    # ⚠️ 실습용 의도적 SQL Injection 취약점 (OWASP A03:2021)
+    # 검색어를 그대로 LIKE 패턴에 문자열 삽입 → UNION/Boolean-based SQLi 가능
+    # PoC: ?title=%' UNION SELECT user_idx,user_id,password,role,email,name,created_at FROM users --
     where_clause = ''
-    params = []
     if title_keyword:
-        where_clause = 'WHERE b.title LIKE %s'
-        params.append(f'%{title_keyword}%')
+        where_clause = f"WHERE b.title LIKE '%{title_keyword}%'"
 
     db = get_db()
     with db.cursor() as cursor:
-        cursor.execute(
-            f'SELECT COUNT(*) AS total FROM board b {where_clause}',
-            params,
-        )
+        cursor.execute(f'SELECT COUNT(*) AS total FROM board b {where_clause}')
         total = cursor.fetchone()['total']
 
         cursor.execute(
@@ -78,7 +76,7 @@ def board_list():
                 b.created_at DESC
             LIMIT %s OFFSET %s
             ''',
-            params + [per_page, offset],
+            [per_page, offset],
         )
         posts = cursor.fetchall()
 
