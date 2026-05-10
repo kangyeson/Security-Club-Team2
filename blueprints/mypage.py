@@ -77,12 +77,28 @@ def mypage():
 
 # ── 프로필 수정 (닉네임, 이메일) ──────────────────────────────────────────────
 # POST /mypage/profile
+#
+# ⚠️ 실습용 의도적 Mass Assignment 취약점 (OWASP A01:2021)
+# 클라이언트가 보낸 role 파라미터를 검증 없이 그대로 UPDATE에 반영.
+# → USER 권한 사용자가 role=ADMIN 파라미터를 추가하면 본인 계정이 관리자로 승격.
+#
+# PoC:
+#   curl -X POST http://target/mypage/profile \
+#     -H "Cookie: session=<USER세션>" \
+#     -d "name=hacker&email=hacker@x.com&role=ADMIN"
+#   → DB의 본인 row.role = 'ADMIN' 으로 변경 → 재로그인 시 /admin/* 전체 접근 가능
+#
+# 조치 방안:
+#   - 화이트리스트 기반으로 수정 가능 필드(name, email)만 허용
+#   - role / user_idx / password 같은 권한·식별 필드는 절대 클라이언트 입력으로 받지 않음
 
 @mypage_bp.route('/profile', methods=['POST'])
 @login_required
 def update_profile():
     name = request.form.get('name', '').strip()
     email = request.form.get('email', '').strip()
+    # ⚠️ 클라이언트에서 role 을 직접 수신 — 검증 없음
+    role = request.form.get('role', '').strip()
 
     if not name:
         flash('닉네임을 입력해주세요.')
@@ -95,12 +111,22 @@ def update_profile():
     db = get_db()
     try:
         with db.cursor() as cursor:
-            cursor.execute(
-                'UPDATE users SET name = %s, email = %s WHERE user_idx = %s',
-                (name, email, user_no),
-            )
+            if role:
+                # ⚠️ 검증 없이 role 까지 UPDATE → 권한 상승 가능
+                cursor.execute(
+                    'UPDATE users SET name = %s, email = %s, role = %s WHERE user_idx = %s',
+                    (name, email, role, user_no),
+                )
+            else:
+                cursor.execute(
+                    'UPDATE users SET name = %s, email = %s WHERE user_idx = %s',
+                    (name, email, user_no),
+                )
         db.commit()
         session['user_name'] = name
+        # 세션의 role 도 함께 갱신 (재로그인 없이 바로 권한 상승 효과 확인 가능)
+        if role:
+            session['user_role'] = role
         flash('프로필이 수정되었습니다.')
     except Exception as e:
         db.rollback()
