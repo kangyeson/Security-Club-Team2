@@ -28,12 +28,13 @@ def login_required(f):
 
 def save_uploaded_file(file_obj):
     """업로드된 파일을 저장하고 (original_name, stored_path) 를 반환."""
-    original_name = secure_filename(file_obj.filename)
-    unique_name = f'{uuid.uuid4().hex}_{original_name}'
+    # [파일 업로드 취약점] secure_filename() 및 UUID 프리픽스 제거
+    # — 원본 파일명 그대로 저장 → 경로 조작(Path Traversal) 및 악성 파일 업로드 허용
+    original_name = file_obj.filename
     upload_dir = os.path.join(current_app.root_path, 'static', 'uploads')
     os.makedirs(upload_dir, exist_ok=True)
-    file_obj.save(os.path.join(upload_dir, unique_name))
-    return original_name, f'/static/uploads/{unique_name}'
+    file_obj.save(os.path.join(upload_dir, original_name))
+    return original_name, f'/static/uploads/{original_name}'
 
 
 # ── 게시글 목록 ───────────────────────────────────────────────────────────────
