@@ -27,7 +27,7 @@
             </div>
             
             <div style="margin-top: 10px; margin-bottom: 10px; color: #333;">
-                {{ comment.content }}
+                {{ comment.content | safe }}
             </div>
 
             {% if current_user_no == comment.user_idx %}

@@ -1,10 +1,12 @@
-from flask import Flask, render_template, session, jsonify
+from flask import Flask, render_template, session, jsonify, request
 import os
 
 app = Flask(__name__)
 
+app.secret_key = '1234'
+
 # ── 기본 설정 ─────────────────────────────────────────────────────────────────
-app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+#app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 
 # 파일 업로드 최대 크기: 50MB
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
@@ -44,6 +46,10 @@ def inject_user():
 # ── 페이지 라우트 ──────────────────────────────────────────────────────────────
 @app.route('/')
 def home():
+    query = request.args.get('query','')
+    if query:
+        return f"<h1>'{query}'에 대한 검색 결과입니다.<h/h1>"
+
     return render_template('index.html')
 
 
